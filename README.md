@@ -153,6 +153,3 @@ Para no abrumarnos, construiremos la aplicación en 6 fases ordenadas. **No se d
 2. **Revisiones (PRs):** Una vez terminado el trabajo en la rama, pide a un compañero que revise el código mediante un Pull Request antes de mezclarlo.
 3. **Dependencias:** No actualizar versiones de librerías de IA sin consultarlo con el equipo, ya que puede romper el orquestador.
 
-```
-
-```
