@@ -1,4 +1,4 @@
-```markdown
+
 # 🕊️ HermesApp: Tu Organizador Académico con IA
 
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
