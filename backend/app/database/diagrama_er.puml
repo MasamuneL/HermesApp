@@ -1,0 +1,118 @@
+@startuml
+!define Table(name,desc) class name as "desc" << (T,#FFAAAA) >>
+!define primary_key(x) <u>x</u>
+!define foreign_key(x) <i>x</i>
+
+skinparam dpi 300
+
+title Diagrama Entidad-Relación - Base de Datos Hermes
+
+' ==========================================
+' ENTIDADES
+' ==========================================
+
+entity "users" as users {
+  primary_key(id) : UUID
+  --
+  email : VARCHAR(255) UNIQUE NOT NULL
+  full_name : VARCHAR(255)
+  password_hash : VARCHAR(255)
+  google_id : VARCHAR(255) UNIQUE
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+  is_active : BOOLEAN
+}
+
+entity "calendar_events" as events {
+  primary_key(id) : UUID
+  --
+  foreign_key(user_id) : UUID NOT NULL
+  title : VARCHAR(500) NOT NULL
+  description : TEXT
+  start_time : TIMESTAMP NOT NULL
+  end_time : TIMESTAMP NOT NULL
+  event_type : VARCHAR(50)
+  classroom : VARCHAR(100)
+  professor : VARCHAR(255)
+  recurrence : VARCHAR(50)
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "rankings" as rankings {
+  primary_key(id) : UUID
+  --
+  foreign_key(user_id) : UUID UNIQUE NOT NULL
+  points : INTEGER DEFAULT 0
+  level : INTEGER DEFAULT 1
+  achievements : JSONB
+  daily_streak : INTEGER DEFAULT 0
+  last_activity : TIMESTAMP
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "friendships" as friendships {
+  primary_key(id) : UUID
+  --
+  foreign_key(user_id) : UUID NOT NULL
+  foreign_key(friend_id) : UUID NOT NULL
+  status : VARCHAR(20)
+  created_at : TIMESTAMP
+}
+
+entity "chat_history" as chat {
+  primary_key(id) : UUID
+  --
+  foreign_key(user_id) : UUID NOT NULL
+  message : TEXT NOT NULL
+  response : TEXT NOT NULL
+  intent : VARCHAR(50)
+  created_at : TIMESTAMP
+}
+
+' ==========================================
+' RELACIONES
+' ==========================================
+
+users ||--o{ events : "tiene"
+users ||--|| rankings : "tiene"
+users ||--o{ friendships : "envía"
+users ||--o{ friendships : "recibe"
+users ||--o{ chat : "conversa"
+
+note right of users
+  Usuario principal del sistema
+  - Autenticación con Google OAuth
+  - O con email/password
+end note
+
+note right of events
+  Eventos del calendario
+  - Clases, exámenes, tareas
+  - Extraídos de fotos (OCR)
+  - Recurrentes (semanal, diario)
+end note
+
+note right of rankings
+  Sistema de gamificación
+  - Puntos acumulados
+  - Nivel del usuario
+  - Logros desbloqueados (JSON)
+  - Racha diaria
+end note
+
+note right of friendships
+  Relaciones de amistad
+  - status: pending, accepted, rejected
+  - Para competir en ranking
+end note
+
+note right of chat
+  Historial de conversaciones
+  - Mensajes del usuario
+  - Respuestas de Gemini
+  - Intención detectada
+end note
+
+@enduml
