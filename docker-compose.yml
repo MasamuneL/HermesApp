@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: hermes-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/hermesdb
+    depends_on:
+      - postgres
+    networks:
+      - hermes-network
+
+  frontend:
+    build: ./Frontend
+    container_name: hermes-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./Frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - hermes-network
+
+  postgres:
+    image: postgres:15
+    container_name: hermes-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=hermesdb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - hermes-network
+
+volumes:
+  postgres-data:
+
+networks:
+  hermes-network:
+    driver: bridge
