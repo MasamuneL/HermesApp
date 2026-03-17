@@ -1,0 +1,781 @@
+CODIGO ANTERIOR
+
+# Importaciones y Librerias:
+
+import time # Vamos a importar esta libreria para hacer llamadas un poco mas lentas y evitar llamadas de manera casi instantanea a GeminiGoogle
+import os           # Sirve para leer carpetas, archivos y rutas de tu computadora.
+import sys          # Sirve para configurar opciones internas de tu sistema operativo (como Windows).
+import uuid         # Sirve para generar numeros de identificacion unicos (ID) que nunca se repiten.
+import base64       # Sirve para traducir una imagen a texto, asi la Inteligencia Artificial puede leerla.
+import asyncio      # Sirve para que el programa pueda hacer varias cosas al mismo tiempo sin trabarse.
+import webbrowser   # Sirve para abrir paginas web automaticamente en tu navegador.
+from datetime import datetime # Sirve para que Python entienda y maneje formatos de fechas y horas.
+import json         # Sirve para guardar multiples datos estructurados (como la lista de contactos)
+
+# ventanas de archivos e interfaces
+import tkinter as tk             # Sirve para crear ventanas e interfaces graficas basicas.
+from tkinter import filedialog, ttk, messagebox   # Se agrega 'messagebox' para alertas visuales.
+
+# Herramienta para seguridad
+from dotenv import load_dotenv # Sirve para leer el archivo .env donde escondemos nuestras contrasenas.
+
+# para conectarnos a la base de datos (Compatible con SQLite y PostgreSQL)
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy.future import select
+
+# Herramientas para la Inteligencia Artificial (Google Gemini y LangChain)
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage
+
+# Configuracion y BaseDe datos
+load_dotenv()
+
+
+# CONFIGURACION DE LA BASE DE DATOS
+
+# --- OPCION 1: SQLite (USO ACTUAL - LOCAL Y SIN INSTALAR NADA EXTRA) ---
+ruta_base_datos = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///hermes_db.sqlite")
+
+# Iniciamos el motor con la ruta que este activa
+motor_base_datos = create_async_engine(ruta_base_datos, echo=False)
+crear_sesion = async_sessionmaker(motor_base_datos, class_=AsyncSession, expire_on_commit=False)
+Base_Datos = declarative_base()
+
+# =====================================================================
+
+
+# Variable global para recordar quien inicio sesion durante todo el programa
+usuario_actual_id = None
+
+# tabla para guardar los datos personales del alumno
+class Usuario(Base_Datos):
+    __tablename__ = "usuarios_registrados"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    nombre = Column(String, nullable=False)
+    correo = Column(String, unique=True, nullable=False)
+    codigo_alumno = Column(String, unique=True, nullable=False)
+    contrasena = Column(String, nullable=False)
+    semestre = Column(String, nullable=False)
+
+# tabla para las clases, vinculada al alumno
+class ClaseDelHorario(Base_Datos):
+    __tablename__ = "mis_clases_guardadas"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    usuario_id = Column(String(36), ForeignKey("usuarios_registrados.id"))
+    materia = Column(String, nullable=False)
+    dia = Column(String) 
+    profesor = Column(String)
+    contacto_profesor = Column(String, default="[]") # Guardamos formato JSON: [{"tipo":"Correo", "valor":"..."}]
+    hora_inicio = Column(DateTime(timezone=True))
+    hora_fin = Column(DateTime(timezone=True))
+    salon = Column(String)
+
+async def preparar_base_de_datos():
+    async with motor_base_datos.begin() as conexion:
+        await conexion.run_sync(Base_Datos.metadata.create_all)
+
+
+# Registro de Usuario e inicio de sesión
+
+async def registrar_nuevo_alumno():
+    print("\n--- REGISTRO DE NUEVO ALUMNO ---")
+    nombre_input = input("Ingresa tu nombre completo: ")
+    correo_input = input("Ingresa tu correo electronico: ")
+    codigo_input = input("Ingresa tu codigo de alumno: ")
+    contra_input = input("Crea una contrasena: ")
+    semestre_input = input("Ingresa tu semestre actual: ")
+    
+    async with crear_sesion() as sesion_bd:
+        nuevo_usuario = Usuario(
+            nombre=nombre_input,
+            correo=correo_input,
+            codigo_alumno=codigo_input,
+            contrasena=contra_input,
+            semestre=semestre_input
+        )
+        sesion_bd.add(nuevo_usuario)
+        await sesion_bd.commit()
+        await sesion_bd.refresh(nuevo_usuario)
+        
+        print("\nRegistro exitoso. Bienvenido, " + nuevo_usuario.nombre)
+        return nuevo_usuario.id
+
+async def iniciar_sesion():
+    print("\n--- INICIAR SESION ---")
+    identificador = input("Ingresa tu correo o tu codigo de alumno: ")
+    contra_input = input("Ingresa tu contrasena: ")
+    
+    async with crear_sesion() as sesion_bd:
+        consulta = select(Usuario).where(
+            ((Usuario.correo == identificador) | (Usuario.codigo_alumno == identificador)) & 
+            (Usuario.contrasena == contra_input)
+        )
+        resultado = await sesion_bd.execute(consulta)
+        usuario_encontrado = resultado.scalar_one_or_none()
+        
+        if usuario_encontrado:
+            print("\nSesion iniciada correctamente. Hola de nuevo, " + usuario_encontrado.nombre)
+            return usuario_encontrado.id
+        else:
+            print("\nError: Datos incorrectos. Intentalo de nuevo.")
+            return None
+
+async def menu_acceso():
+    print("=======================================")
+    print(" BIENVENIDO A HERMES_APP ")
+    print("=======================================")
+    
+    while True:
+        print("\nElige una opcion:")
+        print("1. Iniciar sesion")
+        print("2. Registrarme como nuevo alumno")
+        print("3. Salir")
+        
+        opcion = input("Tu eleccion (1/2/3): ")
+        
+        if opcion == "1":
+            id_obtenido = await iniciar_sesion()
+            if id_obtenido:
+                return id_obtenido
+        elif opcion == "2":
+            id_obtenido = await registrar_nuevo_alumno()
+            if id_obtenido:
+                return id_obtenido
+        elif opcion == "3":
+            print("Saliendo del programa...")
+            sys.exit()
+        else:
+            print("Opcion no valida.")
+
+
+# IA
+
+async def guardar_clase_en_postgres(nombre_materia: str, dia: str, inicio_fecha_hora: str, fin_fecha_hora: str, nombre_salon: str, nombre_maestro: str) -> str:
+    global usuario_actual_id
+    try:
+        fecha_inicio_real = datetime.fromisoformat(inicio_fecha_hora.replace('Z', '+00:00'))
+        fecha_fin_real = datetime.fromisoformat(fin_fecha_hora.replace('Z', '+00:00'))
+        
+        async with crear_sesion() as sesion_bd:
+            nueva_clase = ClaseDelHorario(
+                usuario_id=usuario_actual_id,
+                materia=nombre_materia,
+                dia=dia,
+                profesor=nombre_maestro if nombre_maestro else "Sin maestro",
+                contacto_profesor="[]", # Inicializa como lista JSON vacía
+                hora_inicio=fecha_inicio_real,
+                hora_fin=fecha_fin_real,
+                salon=nombre_salon if nombre_salon else "Sin salon"
+            )
+            sesion_bd.add(nueva_clase)
+            await sesion_bd.commit()
+                        
+            time.sleep(20) 
+            return f"Exito: Acabo de guardar la materia de {nombre_materia} el día {dia}."
+    except Exception as error:
+        return f"error al guardar {nombre_materia}: {str(error)}"
+
+async def leer_horario_con_ia(ruta_de_la_foto: str):
+    print("\nProcesando tu horario. Por favor espera...")
+    
+    _, extension = os.path.splitext(ruta_de_la_foto.lower())
+    tipo_mime = "image/jpeg" if extension in ['.jpg', '.jpeg'] else f"image/{extension[1:]}"
+    
+    cerebro_ia = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash", 
+        temperature=0.1, 
+        max_retries=1
+    )  
+    
+    with open(ruta_de_la_foto, "rb") as archivo_foto:
+        foto_en_texto = base64.b64encode(archivo_foto.read()).decode('utf-8')
+
+    instrucciones = """
+    Eres un asistente experto en lectura de horarios universitarios/escolares.
+    Analiza la imagen adjunta y extrae TODAS las clases.
+    REGLA PARA LOS DÍAS: Fíjate en las columnas (L, M, I, J, V, S). Extrae el nombre del día completo:
+    L = Lunes, M = Martes, I = Miércoles, J = Jueves, V = Viernes, S = Sábado.
+    Devuelve ÚNICAMENTE un objeto JSON válido con la siguiente estructura exacta:
+    {
+      "clases": [
+        {
+          "nombre_materia": "Nombre de la materia",
+          "dia": "Día de la semana completo (Ej. Miércoles)",
+          "inicio_fecha_hora": "YYYY-MM-DDTHH:MM:SSZ",
+          "fin_fecha_hora": "YYYY-MM-DDTHH:MM:SSZ",
+          "nombre_salon": "Nombre del salón o aula",
+          "nombre_maestro": "Nombre del profesor"
+        }
+      ]
+    }
+    No incluyas markdown, solo el texto JSON puro. Si no hay salón o maestro, pon 'Sin maestro' o 'Sin salon'.
+    """
+
+    mensaje = [
+        {"type": "text", "text": instrucciones},
+        {"type": "image_url", "image_url": {"url": f"data:{tipo_mime};base64,{foto_en_texto}"}}
+    ]
+
+    exito = False
+    intentos = 0
+    max_intentos = 3
+
+    while not exito and intentos < max_intentos:
+        try:
+            respuesta = await cerebro_ia.ainvoke([HumanMessage(content=mensaje)])
+            texto_respuesta = respuesta.content.strip()
+            
+            if texto_respuesta.startswith("```json"):
+                texto_respuesta = texto_respuesta[7:-3]
+            elif texto_respuesta.startswith("```"):
+                texto_respuesta = texto_respuesta[3:-3]
+                
+            datos_extraidos = json.loads(texto_respuesta)
+            lista_clases = datos_extraidos.get("clases", [])
+            
+            print(f"\n¡Extracción exitosa! Se encontraron {len(lista_clases)} clases.")
+            print("Guardando en la base de datos...\n")
+            
+            for clase in lista_clases:
+                resultado = await guardar_clase_en_postgres(
+                    nombre_materia=clase.get("nombre_materia"),
+                    dia=clase.get("dia", "Sin día"), 
+                    inicio_fecha_hora=clase.get("inicio_fecha_hora"),
+                    fin_fecha_hora=clase.get("fin_fecha_hora"),
+                    nombre_salon=clase.get("nombre_salon", "Sin salon"),
+                    nombre_maestro=clase.get("nombre_maestro", "Sin maestro")
+                )
+                print(f"- {resultado}")
+                
+            exito = True 
+            
+        except Exception as e:
+            error_str = str(e)
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                intentos += 1
+                print(f"\n[Aviso de Cuota] Google está procesando la info. Pausando automáticamente por 60 segundos... (Intento {intentos}/{max_intentos})")
+                await asyncio.sleep(60)
+            else:
+                print(f"\nError al procesar el horario: {e}")
+                break
+
+    print("\n¡El procesamiento de tu horario ha terminado!")
+    
+    
+    
+# GENERACION DE LA PAGINA WEB ESTATICA (OPCION 1)
+
+async def crear_pagina_web():
+    global usuario_actual_id
+    print("\nGenerando tu vista digital del horario...")
+    
+    async with crear_sesion() as sesion_bd:
+        consulta = select(ClaseDelHorario).where(ClaseDelHorario.usuario_id == usuario_actual_id)
+        resultado = await sesion_bd.execute(consulta)
+        todas_las_clases = resultado.scalars().all()
+
+    if not todas_las_clases:
+        print("No se encontraron clases para mostrar. Asegurate de que la IA leyo la foto correctamente.")
+        return
+
+    codigo_html = """<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset='utf-8'>
+    <title>Mi Horario - Hermes App</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; padding: 20px; color: #333; }
+        h1 { text-align: center; color: #2c3e50; }
+        .contenedor { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #ddd; }
+        th { background-color: #007BFF; color: white; font-weight: bold; text-transform: uppercase; }
+        tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>Tu Horario Procesado</h1>
+        <table>
+            <tr>
+                <th>Materia</th>
+                <th>Día</th>
+                <th>Maestro</th>
+                <th>Contacto Maestro</th> <!-- Se mantiene visible en la web exportada -->
+                <th>Salón</th>
+                <th>Hora Inicio</th>
+                <th>Hora Fin</th>
+            </tr>
+"""
+
+    for clase in todas_las_clases:
+        inicio_str = clase.hora_inicio.strftime("%H:%M") if clase.hora_inicio else "N/A"
+        fin_str = clase.hora_fin.strftime("%H:%M") if clase.hora_fin else "N/A"
+        
+        # Procesamos la información de contacto para que se vea bien en la web
+        contacto_mostrar = "Sin contacto"
+        try:
+            contactos_lista = json.loads(clase.contacto_profesor)
+            if isinstance(contactos_lista, list) and len(contactos_lista) > 0:
+                textos = [f"<b>{c['tipo']}:</b> {c['valor']}" for c in contactos_lista]
+                contacto_mostrar = "<br>".join(textos)
+        except:
+            contacto_mostrar = clase.contacto_profesor
+            
+        codigo_html += f"""
+            <tr>
+                <td>{clase.materia}</td>
+                <td>{clase.dia}</td>
+                <td>{clase.profesor}</td>
+                <td>{contacto_mostrar}</td>
+                <td>{clase.salon}</td>
+                <td>{inicio_str}</td>
+                <td>{fin_str}</td>
+            </tr>"""
+
+    codigo_html += """
+        </table>
+    </div>
+</body>
+</html>
+"""
+
+    nombre_archivo_web = "mi_horario_generado.html"
+    with open(nombre_archivo_web, "w", encoding="utf-8") as archivo:
+        archivo.write(codigo_html)
+        
+    print("Abriendo tu horario en el navegador web...")
+    webbrowser.open("file://" + os.path.abspath(nombre_archivo_web))
+
+
+
+# --- INTERFAZ GRAFICA INTERACTIVA AVANZADA ---
+
+async def actualizar_clases_en_bd(datos_modificados):
+    """ Toma los datos recopilados de la tabla y los sube a la BD de forma asíncrona """
+    async with crear_sesion() as sesion_bd:
+        for clase_dict in datos_modificados:
+            consulta = select(ClaseDelHorario).where(ClaseDelHorario.id == clase_dict["id"])
+            resultado = await sesion_bd.execute(consulta)
+            clase_obj = resultado.scalar_one_or_none()
+            
+            if clase_obj:
+                clase_obj.materia = clase_dict["materia"]
+                clase_obj.dia = clase_dict["dia"]
+                clase_obj.profesor = clase_dict["profesor"]
+                clase_obj.contacto_profesor = clase_dict["contacto"]
+                clase_obj.salon = clase_dict["salon"]
+                
+                # Transformamos el texto HH:MM de vuelta a la hora del sistema
+                try:
+                    h_ini, m_ini = map(int, clase_dict["inicio"].split(":"))
+                    if clase_obj.hora_inicio:
+                        clase_obj.hora_inicio = clase_obj.hora_inicio.replace(hour=h_ini, minute=m_ini)
+                        
+                    h_fin, m_fin = map(int, clase_dict["fin"].split(":"))
+                    if clase_obj.hora_fin:
+                        clase_obj.hora_fin = clase_obj.hora_fin.replace(hour=h_fin, minute=m_fin)
+                except Exception:
+                    pass
+        await sesion_bd.commit()
+
+def recopilar_datos_tabla(tabla):
+    """ Extrae toda la información actual de las filas de la tabla para guardarla """
+    datos_recolectados = []
+    for fila_id in tabla.get_children():
+        fila_datos = tabla.item(fila_id, 'values')
+        datos_recolectados.append({
+            "id": fila_datos[0],
+            "materia": fila_datos[1],
+            "dia": fila_datos[2],
+            "profesor": fila_datos[3],
+            "contacto": fila_datos[4], # Recuperamos el contacto oculto modificado
+            "salon": fila_datos[5],
+            "inicio": fila_datos[6],
+            "fin": fila_datos[7]
+        })
+    return datos_recolectados
+
+def crear_ventana_interactiva(todas_las_clases):
+    """ Crea la ventana y todos los elementos visuales, pero NO bloquea el código """
+    ventana = tk.Tk()
+    ventana.title("Hermes App - Horario Interactivo (Modo Edición)")
+    ventana.geometry("1050x520") # Más grande para acomodar el panel inferior
+    
+    # Diccionario para controlar el flujo asíncrono desde los botones
+    estado_ventana = {"cerrar": False, "guardar_ahora": False}
+    
+    # Configuracion de colores y estilo
+    estilo = ttk.Style()
+    estilo.theme_use("clam")
+    estilo.configure("Treeview.Heading", font=('Arial', 10, 'bold'), background="#007BFF", foreground="white")
+    estilo.configure("Treeview", rowheight=30, font=('Arial', 10))
+    
+    marco = ttk.Frame(ventana)
+    marco.pack(fill=tk.BOTH, expand=True, padx=20, pady=(10, 5))
+    
+    scroll = ttk.Scrollbar(marco)
+    scroll.pack(side=tk.RIGHT, fill=tk.Y)
+    
+    columnas = ("id_clase", "materia", "dia", "maestro", "contacto", "salon", "inicio", "fin")
+    tabla = ttk.Treeview(marco, columns=columnas, show="headings", yscrollcommand=scroll.set)
+    
+    # Configuramos encabezados
+    tabla.heading("id_clase", text="ID") 
+    tabla.heading("materia", text="Materia")
+    tabla.heading("dia", text="Día")
+    tabla.heading("maestro", text="Maestro")
+    tabla.heading("contacto", text="Contacto (Oculto)")
+    tabla.heading("salon", text="Salón")
+    tabla.heading("inicio", text="Hora Inicio")
+    tabla.heading("fin", text="Hora Fin")
+    
+    # Ocultamos ID y Contacto
+    tabla.column("id_clase", width=0, stretch=tk.NO)
+    tabla.column("contacto", width=0, stretch=tk.NO) 
+    
+    anchos = {"materia": 220, "dia": 100, "maestro": 180, "salon": 100, "inicio": 90, "fin": 90}
+    for col, ancho in anchos.items():
+        tabla.column(col, width=ancho, anchor=tk.CENTER)
+
+    # Llenamos la tabla inicial
+    for clase in todas_las_clases:
+        inicio_str = clase.hora_inicio.strftime("%H:%M") if clase.hora_inicio else "N/A"
+        fin_str = clase.hora_fin.strftime("%H:%M") if clase.hora_fin else "N/A"
+        
+        # Validamos el JSON de los contactos para la BD
+        cont_val = clase.contacto_profesor
+        if not cont_val or cont_val == "Sin contacto":
+            cont_val = "[]"
+            
+        tabla.insert("", tk.END, values=(
+            clase.id, clase.materia, clase.dia, clase.profesor, 
+            cont_val, clase.salon, inicio_str, fin_str
+        ))
+        
+    tabla.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    scroll.config(command=tabla.yview)
+
+    # --- PANEL INFERIOR: VISOR DE CONTACTOS DEL MAESTRO ---
+    marco_visor = ttk.LabelFrame(ventana, text=" Información de Contacto del Maestro", padding=(10, 5))
+    marco_visor.pack(fill=tk.X, padx=20, pady=5)
+    
+    lbl_detalles = ttk.Label(marco_visor, text=" Haz DOBLE CLIC sobre el nombre de un maestro en la tabla para ver sus métodos de contacto.", font=("Arial", 10), foreground="#0055aa")
+    lbl_detalles.pack(anchor=tk.W)
+    
+    def mostrar_contactos_maestro(nombre_maestro, datos_contacto_json):
+        try:
+            lista_contactos = json.loads(datos_contacto_json)
+            if not lista_contactos:
+                lbl_detalles.config(text=f"El maestro {nombre_maestro} aún no tiene medios de contacto registrados.")
+            else:
+                textos = [f"[{c['tipo']}] {c['valor']}" for c in lista_contactos]
+                lbl_detalles.config(text=f"Contactos de {nombre_maestro}:   " + "   |   ".join(textos))
+        except json.JSONDecodeError:
+            # Compatibilidad si había texto plano viejo en la BD
+            lbl_detalles.config(text=f"Contactos de {nombre_maestro}: {datos_contacto_json}")
+
+
+    # --- PESTAÑA DE EDICIÓN Y SUS FUNCIONES ---
+    def abrir_pestaña_editar():
+        seleccion = tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Aviso", "Por favor selecciona una materia de la lista para editar.", parent=ventana)
+            return
+            
+        item_id = seleccion[0]
+        valores_actuales = tabla.item(item_id, 'values')
+        
+        ventana_edicion = tk.Toplevel(ventana)
+        ventana_edicion.title(f"Editando: {valores_actuales[1]}")
+        ventana_edicion.geometry("500x550")
+        ventana_edicion.grab_set() 
+        
+        ttk.Label(ventana_edicion, text="Modifica los datos de la materia:", font=("Arial", 12, "bold")).pack(pady=10)
+        
+        form_frame = ttk.Frame(ventana_edicion)
+        form_frame.pack(padx=20, pady=5, fill=tk.BOTH, expand=True)
+        
+        # Entradas de texto clásicas
+        entradas = {}
+        campos_simples = [
+            ("Materia:", 1, 0), ("Día:", 2, 1), ("Maestro:", 3, 2)
+        ]
+        
+        for etiqueta, col_idx, grid_row in campos_simples:
+            ttk.Label(form_frame, text=etiqueta).grid(row=grid_row, column=0, sticky=tk.W, pady=5)
+            ent = ttk.Entry(form_frame, width=35)
+            ent.insert(0, valores_actuales[col_idx])
+            ent.grid(row=grid_row, column=1, pady=5, padx=10, sticky=tk.W)
+            entradas[col_idx] = ent
+            
+        # --- ZONA DE MÚLTIPLES CONTACTOS (Requerimiento 1) ---
+        ttk.Label(form_frame, text="Contacto Maestro:").grid(row=3, column=0, sticky=tk.NW, pady=10)
+        
+        contactos_frame = ttk.Frame(form_frame)
+        contactos_frame.grid(row=3, column=1, sticky=tk.W, pady=5, padx=10)
+        
+        filas_widgets = []
+        
+        def agregar_fila_contacto(tipo="Correo", valor=""):
+            fila_frame = ttk.Frame(contactos_frame)
+            fila_frame.pack(fill=tk.X, pady=2)
+            
+            # Pestaña desplegable (Combobox)
+            opciones = ["Correo", "Teléfono", "Otro"]
+            combo_tipo = ttk.Combobox(fila_frame, values=opciones, width=10, state="readonly")
+            
+            if tipo in opciones: combo_tipo.set(tipo)
+            elif tipo: combo_tipo.set("Otro")
+            else: combo_tipo.set("Correo")
+            combo_tipo.pack(side=tk.LEFT, padx=(0, 5))
+            
+            # Campo de valor
+            ent_valor = ttk.Entry(fila_frame, width=22)
+            ent_valor.insert(0, valor)
+            ent_valor.pack(side=tk.LEFT, padx=5)
+            
+            # Botón para borrar la fila individual
+            def eliminar_fila(f=fila_frame):
+                for i, widgets in enumerate(filas_widgets):
+                    if widgets[2] == f:
+                        f.destroy()
+                        filas_widgets.pop(i)
+                        break
+                        
+            btn_eliminar = ttk.Button(fila_frame, text="❌", width=3, command=eliminar_fila)
+            btn_eliminar.pack(side=tk.LEFT, padx=5)
+            
+            filas_widgets.append((combo_tipo, ent_valor, fila_frame))
+
+        # Cargamos contactos previos
+        try:
+            contactos_guardados = json.loads(valores_actuales[4])
+            if not isinstance(contactos_guardados, list): contactos_guardados = []
+        except:
+            if valores_actuales[4] and valores_actuales[4] not in ("Sin contacto", "[]"):
+                contactos_guardados = [{"tipo": "Otro", "valor": valores_actuales[4]}]
+            else:
+                contactos_guardados = []
+                
+        for c in contactos_guardados:
+            agregar_fila_contacto(c.get("tipo", ""), c.get("valor", ""))
+            
+        # Si no había contactos, ponemos un campo vacío por defecto
+        if not contactos_guardados:
+            agregar_fila_contacto()
+            
+        # Botón para añadir un nuevo medio de contacto
+        btn_add_contacto = ttk.Button(form_frame, text="➕ Agregar otro medio", command=agregar_fila_contacto)
+        btn_add_contacto.grid(row=4, column=1, sticky=tk.W, pady=(0,10), padx=10)
+        
+        # --- FIN ZONA CONTACTOS ---
+        
+        # Resto de Entradas Clásicas
+        campos_restantes = [
+            ("Salón:", 5, 5), ("Hora de Inicio (HH:MM):", 6, 6), ("Hora de Fin (HH:MM):", 7, 7)
+        ]
+        for etiqueta, col_idx, grid_row in campos_restantes:
+            ttk.Label(form_frame, text=etiqueta).grid(row=grid_row, column=0, sticky=tk.W, pady=5)
+            ent = ttk.Entry(form_frame, width=35)
+            ent.insert(0, valores_actuales[col_idx])
+            ent.grid(row=grid_row, column=1, pady=5, padx=10, sticky=tk.W)
+            entradas[col_idx] = ent
+            
+        def confirmar_edicion_local():
+            if len(entradas[6].get().split(":")) != 2 or len(entradas[7].get().split(":")) != 2:
+                messagebox.showerror("Error de Formato", "Las horas deben estar en formato HH:MM (Ejemplo: 14:30)")
+                return
+                
+            # Procesamos todos los contactos llenos
+            nuevos_contactos = []
+            for combo, ent, _ in filas_widgets:
+                t = combo.get()
+                v = ent.get().strip()
+                if v: # Solo guardamos si escribió algo
+                    nuevos_contactos.append({"tipo": t, "valor": v})
+                    
+            json_contactos_final = json.dumps(nuevos_contactos)
+
+            # Actualizamos la tabla
+            tabla.item(item_id, values=(
+                valores_actuales[0], # ID oculto
+                entradas[1].get(),   # Materia
+                entradas[2].get(),   # Dia
+                entradas[3].get(),   # Maestro
+                json_contactos_final,# Contacto (Se guarda oculto y formateado)
+                entradas[5].get(),   # Salon
+                entradas[6].get(),   # Inicio
+                entradas[7].get()    # Fin
+            ))
+            
+            messagebox.showinfo("Listo", "Cambios aplicados temporalmente. No olvides darle a 'Guardar y Actualizar' en la ventana principal.", parent=ventana_edicion)
+            ventana_edicion.destroy()
+
+        ttk.Button(ventana_edicion, text=" Aceptar Cambios", command=confirmar_edicion_local).pack(pady=20)
+
+
+    # --- SISTEMA DE DOBLE CLIC INTELIGENTE (Requerimiento 2) ---
+    def al_doble_clic(event):
+        item_id = tabla.identify_row(event.y)
+        columna_id = tabla.identify_column(event.x)
+        
+        if not item_id:
+            return
+            
+        # Si la columna clickeada es la #4 (Maestro), mostramos los detalles
+        if columna_id == '#4':
+            valores = tabla.item(item_id, 'values')
+            mostrar_contactos_maestro(valores[3], valores[4])
+        else:
+            # Si se hace doble clic en cualquier otra parte, abrimos la edición
+            abrir_pestaña_editar()
+
+    tabla.bind("<Double-1>", al_doble_clic)
+
+
+    # --- ZONA DE BOTONES DE ACCIÓN (Requerimientos 3 y 4) ---
+    def solicitar_guardado():
+        # Enciende el interruptor. El bucle asíncrono lo atrapará sin cerrar la ventana.
+        estado_ventana["guardar_ahora"] = True
+
+    def solicitar_cierre():
+        # Enciende el interruptor de cierre. Rompe el bucle y cierra la ventana.
+        estado_ventana["cerrar"] = True
+        
+    # Atrapamos si se pica la 'X' de la esquina
+    ventana.protocol("WM_DELETE_WINDOW", solicitar_cierre)
+
+    marco_botones = ttk.Frame(ventana)
+    marco_botones.pack(pady=15)
+    
+    btn_editar = ttk.Button(marco_botones, text=" Editar Selección", command=abrir_pestaña_editar)
+    btn_editar.grid(row=0, column=0, padx=10)
+    
+    btn_guardar = ttk.Button(marco_botones, text=" Guardar y Actualizar", command=solicitar_guardado)
+    btn_guardar.grid(row=0, column=1, padx=10)
+    
+    btn_cerrar = ttk.Button(marco_botones, text=" Cerrar y volver a Terminal", command=solicitar_cierre)
+    btn_cerrar.grid(row=0, column=2, padx=10)
+
+    # Devolvemos los objetos para controlarlos asincronamente
+    return ventana, tabla, estado_ventana
+
+
+async def extraer_y_mostrar_interfaz():
+    global usuario_actual_id
+    print("\nAbriendo tu ventana interactiva...")
+    
+    async with crear_sesion() as sesion_bd:
+        consulta = select(ClaseDelHorario).where(ClaseDelHorario.usuario_id == usuario_actual_id)
+        resultado = await sesion_bd.execute(consulta)
+        todas_las_clases = resultado.scalars().all()
+
+    if not todas_las_clases:
+        print("No se encontraron clases para mostrar. Asegurate de que tienes datos guardados.")
+        return
+
+    # Creamos la ventana de forma no-bloqueante
+    ventana, tabla, estado_ventana = crear_ventana_interactiva(todas_las_clases)
+    
+    try:
+        # BUCLE PRINCIPAL (Mantiene la ventana viva y escucha botones sin congelar Python)
+        while not estado_ventana["cerrar"]:
+            ventana.update()
+            
+            # Requerimiento 3: Si se solicitó guardar, se hace y NO se rompe el bucle
+            if estado_ventana["guardar_ahora"]:
+                estado_ventana["guardar_ahora"] = False
+                print("Subiendo cambios a la base de datos...")
+                
+                datos_nuevos = recopilar_datos_tabla(tabla)
+                await actualizar_clases_en_bd(datos_nuevos)
+                
+                messagebox.showinfo("Éxito", "¡Tus cambios han sido guardados en la base de datos exitosamente!", parent=ventana)
+                print("¡Actualización completada!")
+                
+            await asyncio.sleep(0.05) # Pausa mínima para no saturar el CPU
+            
+    except tk.TclError:
+        pass # Ignoramos errores si la ventana se fuerza a cerrar con la X
+    finally:
+        # Requerimiento 4: Solo cuando se rompe el bucle (cerrar=True), se destruye la ventana
+        try:
+            ventana.destroy()
+            print("Saliendo......")
+        except:
+            pass
+
+
+
+# ORQUESTADOR PRINCIPAL
+
+def seleccionar_imagen_con_ventana():
+    ventana_raiz = tk.Tk()
+    ventana_raiz.withdraw() 
+    ventana_raiz.attributes('-topmost', True)
+    
+    ruta_seleccionada = filedialog.askopenfilename(
+        title="Seleccione Imagen de horario",
+        filetypes=[
+            ("Imagenes de Horario", "*.png *.jpg *.jpeg *.webp"),
+            ("Todos los archivos", "*.*")
+        ]
+    )
+    ventana_raiz.destroy()
+    return ruta_seleccionada
+
+
+async def iniciar_programa():
+    global usuario_actual_id
+    
+    await preparar_base_de_datos()
+    
+    # 1. Login inicial (obligatorio una vez)
+    usuario_actual_id = await menu_acceso()
+    
+    # 2. Bucle infinito del Menú Principal en Terminal
+    while True:
+        print("\n=======================================")
+        print(" MENU PRINCIPAL ")
+        print("=======================================")
+        print("1. Cargar tu NUEVO horario")
+        print("2. Ver y Editar horario actual")
+        print("3. Abrir página WEB (HTML)")
+        print("4. Salir y cerrar aplicacion")
+        
+        opcion_vista = input("\nElige una opcion (1/2/3/4): ")
+        
+        if opcion_vista == "1":
+            print("\n--- CARGAR HORARIO ---")
+            print("Abriendo el explorador de archivos...")
+            ruta_foto = seleccionar_imagen_con_ventana()
+            if not ruta_foto:
+                print("\nOperacion cancelada: No seleccionaste ninguna imagen.")
+            else:
+                await leer_horario_con_ia(ruta_foto)
+                
+        elif opcion_vista == "2":
+            await extraer_y_mostrar_interfaz()
+            
+        elif opcion_vista == "3":
+            await crear_pagina_web()
+            
+        elif opcion_vista == "4":
+            print("\nCerrando sistema... ¡Hasta luego!")
+            sys.exit()
+            
+        else:
+            print("\nOpcion no valida. Intenta de nuevo.")
+
+
+# Puerta de entrada del programa
+if __name__ == "__main__":
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
+    asyncio.run(iniciar_programa())

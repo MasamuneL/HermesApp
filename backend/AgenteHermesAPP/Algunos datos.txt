@@ -1,0 +1,25 @@
+cd "C:\Users\User\Desktop\Hermes-Desarrollo\HermesApp-angel-database-models\backend"
+cd "C:\Users\User\Desktop\AgenteHermesAPP"
+
+cd "C:\Users\User\Desktop\HERMES_1\Actual(ActualizarAPI)\AgenteHermesAPP"
+
+python3 hermes_app.py
+python hermes_app.py
+
+
+PostgreSQL
+contraseña:  Urano80
+Puerto: 5432
+
+
+summary.installation.directory: C:\Program Files\PostgreSQL\18
+summary.server.installation.directory: C:\Program Files\PostgreSQL\18
+summary.data.directory: C:\Program Files\PostgreSQL\18\data
+summary.database.port: 5432
+summary.database.superuser: postgres
+summary.serviceaccount: NT AUTHORITY\NetworkService
+summary.databaseservice: postgresql-x64-18
+summary.clt.installation.directory: C:\Program Files\PostgreSQL\18
+summary.pgadmin.installation.directory: C:\Program Files\PostgreSQL\18\pgAdmin 4
+summary.sbp.installation.directory: C:\Program Files\PostgreSQL\18
+summary.installation.logfile: C:\Users\User\AppData\Local\Temp\install-postgresql.log
