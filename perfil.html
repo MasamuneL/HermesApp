@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HERMES — Perfil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #f0d080;
+      --gold-dim: rgba(201,168,76,0.3);
+      --dark: #0a0a0c;
+      --text: #1a1408;
+      --muted: #9a8a6a;
+      --surface: #f9f7f3;
+      --border: #e8dcc8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #fff; color: var(--text);
+      font-family: 'Outfit', sans-serif; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    header {
+      background: #fff; border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .menu-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; background: transparent;
+      border: 1px solid var(--border); color: var(--muted);
+      font-family: 'Outfit', sans-serif; font-size: 12px;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; border-radius: 2px; transition: all 0.2s;
+    }
+    .menu-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .logo-area {
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; transition: opacity 0.2s; text-decoration: none;
+    }
+    .logo-area:hover { opacity: 0.75; }
+    .logo-img {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--white); border: 1px solid var(--gold-dim);
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+    }
+    .logo-img img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 700; letter-spacing: 0.2em; color: var(--text);
+    }
+    .avatar-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--white); border: 2px solid var(--gold-dim);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s;
+    }
+    .avatar-btn:hover { border-color: var(--gold); }
+    .dropdown {
+      display: none; position: absolute; top: 72px; left: 32px;
+      background: #fff; border: 1px solid var(--border);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08); min-width: 200px; z-index: 200;
+    }
+    .dropdown.open { display: block; }
+    .dropdown a {
+      display: block; padding: 12px 20px; font-size: 12px;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text); text-decoration: none;
+      border-bottom: 1px solid var(--border); transition: background 0.15s, color 0.15s;
+    }
+    .dropdown a:last-child { border-bottom: none; }
+    .dropdown a:hover { background: var(--surface); color: var(--gold); }
+    .nav-bar {
+      padding: 12px 32px; background: var(--surface);
+      border-bottom: 1px solid var(--border); display: flex; gap: 12px;
+    }
+    .nav-link {
+      padding: 9px 20px; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted); background: transparent;
+      border: 1px solid transparent; border-radius: 2px;
+      cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--gold); border-color: var(--gold-dim);
+      background: rgba(201,168,76,0.05);
+    }
+    main {
+      max-width: 720px; margin: 0 auto;
+      padding: 48px 32px; width: 100%;
+      animation: fadeUp 0.5s ease forwards;
+    }
+    .photo-section {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 40px; gap: 16px;
+    }
+    .photo-wrapper { position: relative; width: 120px; height: 120px; }
+    .photo-circle {
+      width: 120px; height: 120px; border-radius: 50%;
+      background: var(--white); border: 2px solid var(--gold-dim);
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 24px rgba(201,168,76,0.15);
+    }
+    .photo-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-initials {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem; font-weight: 600; color: var(--gold);
+    }
+    .photo-edit-btn {
+      position: absolute; bottom: 4px; right: 4px;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--gold); border: 2px solid #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.2s; font-size: 13px;
+    }
+    .photo-edit-btn:hover { background: var(--gold-light); }
+    #photoInput { display: none; }
+    .profile-name-display {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 600; letter-spacing: 0.05em;
+      color: var(--text); text-align: center;
+    }
+    .profile-role { font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); }
+
+    /* Puntos badge debajo del nombre */
+    .points-badge {
+      display: flex; align-items: center; gap: 8px;
+      border: 1px solid var(--gold-dim);
+      padding: 6px 20px; margin-top: 4px;
+    }
+    .points-badge .pts-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 700; color: var(--gold);
+    }
+    .points-badge .pts-label {
+      font-size: 11px; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    .gold-divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+      margin: 8px 0 36px;
+    }
+    .form-section-title {
+      font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
+      color: var(--gold); font-weight: 600; margin-bottom: 20px;
+    }
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 20px; margin-bottom: 32px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); font-weight: 500;
+    }
+    .field input, .field select {
+      padding: 11px 14px; border: 1px solid var(--border);
+      background: var(--surface); font-family: 'Outfit', sans-serif;
+      font-size: 14px; color: var(--text); outline: none;
+      transition: border-color 0.2s, background 0.2s; border-radius: 2px; appearance: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--gold); background: #fff; }
+    .field input:disabled, .field select:disabled { background: #f5f5f5; color: var(--muted); cursor: not-allowed; }
+    .date-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
+    .btn {
+      padding: 12px 28px; font-family: 'Outfit', sans-serif;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.2em;
+      text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--white); color: var(--gold-light); border: 1px solid var(--gold-light); }
+    .btn-primary:hover { background: #2d2410; }
+    .btn-secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+    .toast {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--white); color: var(--gold-light);
+      padding: 12px 28px; font-size: 13px; letter-spacing: 0.05em;
+      border: 1px solid var(--gold-dim); border-radius: 2px;
+      opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 500; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <button class="menu-btn" onclick="toggleMenu()">☰ Menú</button>
+    <a href="main.html" class="logo-area" style="text-decoration:none;">
+      <div class="logo-img">
+        <img src="LogoHermes.png" alt="H"
+          onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<span style=\'color:#c9a84c;font-size:18px;font-weight:700;\'>H</span>')" />
+      </div>
+      <span class="logo-name">HERMES</span>
+    </a>
+    <div class="avatar-btn" onclick="window.location.href='perfil.html'">
+      <span style="color:#c9a84c;font-size:16px;">👤</span>
+    </div>
+    <div class="dropdown" id="mainMenu">
+      <a href="main.html">🏠 Inicio</a>
+      <a href="perfil.html">👤 Perfil</a>
+      <a href="ranking.html">🏆 Ranking</a>
+      <a href="calendario.html">📅 Calendario</a>
+      <a href="logros.html">⭐ Logros</a>
+      <a href="login.html" style="color:#c0392b;">↩ Cerrar Sesión</a>
+    </div>
+  </header>
+
+  <div class="nav-bar">
+    <a class="nav-link" href="ranking.html">🏆 Ranking</a>
+    <a class="nav-link" href="calendario.html">📅 Calendario y Chat</a>
+    <a class="nav-link" href="logros.html">⭐ Logros</a>
+  </div>
+
+  <main>
+
+    <div class="photo-section">
+      <div class="photo-wrapper">
+        <div class="photo-circle" id="photoCircle">
+          <span class="photo-initials" id="photoInitials">—</span>
+        </div>
+        <div class="photo-edit-btn" onclick="document.getElementById('photoInput').click()" title="Cambiar foto">✏️</div>
+        <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoChange(event)" />
+      </div>
+      <h1 class="profile-name-display" id="profileNameDisplay">Cargando...</h1>
+      <span class="profile-role">Estudiante</span>
+
+      <!-- Puntos acumulados — se cargan de GET /perfil -->
+      <div class="points-badge">
+        <span class="pts-num" id="profilePuntos">—</span>
+        <span class="pts-label">puntos acumulados</span>
+      </div>
+    </div>
+
+    <div class="gold-divider"></div>
+
+    <p class="form-section-title">Datos Personales</p>
+    <div class="form-grid">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="fieldNombre" placeholder="Tu nombre completo" />
+      </div>
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" id="fieldCorreo" placeholder="correo@universidad.edu" />
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Fecha de nacimiento</label>
+        <div class="date-row">
+          <input type="number" id="fieldDia"  placeholder="Día"  min="1"    max="31"   />
+          <select id="fieldMes">
+            <option value="">Mes</option>
+            <option value="1">Enero</option><option value="2">Febrero</option>
+            <option value="3">Marzo</option><option value="4">Abril</option>
+            <option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option>
+            <option value="9">Septiembre</option><option value="10">Octubre</option>
+            <option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+          <input type="number" id="fieldAnio" placeholder="Año"  min="1950" max="2015" />
+        </div>
+      </div>
+    </div>
+
+    <p class="form-section-title">Datos Académicos</p>
+    <div class="form-grid">
+      <div class="field">
+        <label>Universidad / Institución</label>
+        <input type="text" id="fieldUniversidad" placeholder="Nombre de tu universidad" />
+      </div>
+      <div class="field">
+        <label>Carrera</label>
+        <input type="text" id="fieldCarrera" placeholder="Ej. Ingeniería en Sistemas" />
+      </div>
+      <div class="field">
+        <label>Semestre / Año en curso</label>
+        <select id="fieldSemestre">
+          <option value="">Selecciona</option>
+          <option value="1">1er semestre</option><option value="2">2do semestre</option>
+          <option value="3">3er semestre</option><option value="4">4to semestre</option>
+          <option value="5">5to semestre</option><option value="6">6to semestre</option>
+          <option value="7">7mo semestre</option><option value="8">8vo semestre</option>
+          <option value="9">9no semestre</option><option value="10">10mo semestre</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="cancelEdit()">Cancelar</button>
+      <button class="btn btn-primary"   onclick="saveProfile()">Guardar cambios</button>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ════════════════════════════════════════════════════
+    // CONFIG
+    // ════════════════════════════════════════════════════
+    const API_BASE = "http://localhost:8000";
+
+    let originalData = {};
+
+    // ── CARGAR PERFIL ────────────────────────────────────
+    async function loadProfile() {
+      try {
+        const res = await fetch(`${API_BASE}/perfil`);
+        // Espera: { nombre, correo, dia, mes, anio, universidad, carrera, semestre, foto_url, puntos }
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        fillForm(data);
+        originalData = { ...data };
+      } catch {
+        const demo = {
+          nombre: "Oswaldo Javier", correo: "oswaldo@universidad.edu",
+          dia: 15, mes: 3, anio: 2003,
+          universidad: "Universidad de Guadalajara",
+          carrera: "Ingeniería en Datos e IA",
+          semestre: "6", foto_url: "",
+          puntos: 50  // viene de la DB, fue calculado por logros.html
+        };
+        fillForm(demo);
+        originalData = { ...demo };
+        console.warn("FastAPI no disponible — usando datos demo");
+      }
+    }
+
+    function fillForm(data) {
+      document.getElementById("fieldNombre").value      = data.nombre      || "";
+      document.getElementById("fieldCorreo").value      = data.correo      || "";
+      document.getElementById("fieldDia").value         = data.dia         || "";
+      document.getElementById("fieldMes").value         = data.mes         || "";
+      document.getElementById("fieldAnio").value        = data.anio        || "";
+      document.getElementById("fieldUniversidad").value = data.universidad || "";
+      document.getElementById("fieldCarrera").value     = data.carrera     || "";
+      document.getElementById("fieldSemestre").value    = data.semestre    || "";
+
+      // Puntos — calculados por logros.html y guardados via PUT /perfil/puntos
+      document.getElementById("profilePuntos").textContent =
+        data.puntos !== undefined ? data.puntos.toLocaleString() : "0";
+
+      updateNameDisplay(data.nombre);
+      if (data.foto_url) setPhoto(data.foto_url);
+    }
+
+    function updateNameDisplay(nombre) {
+      document.getElementById("profileNameDisplay").textContent = nombre || "Sin nombre";
+      const parts = (nombre || "").trim().split(" ");
+      document.getElementById("photoInitials").textContent = parts.length >= 2
+        ? (parts[0][0] + parts[1][0]).toUpperCase()
+        : (parts[0]?.[0] || "?").toUpperCase();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadProfile();
+      document.getElementById("fieldNombre").addEventListener("input", (e) => {
+        updateNameDisplay(e.target.value);
+      });
+    });
+
+    // ── GUARDAR PERFIL ───────────────────────────────────
+    async function saveProfile() {
+      const payload = {
+        nombre:      document.getElementById("fieldNombre").value.trim(),
+        correo:      document.getElementById("fieldCorreo").value.trim(),
+        dia:         parseInt(document.getElementById("fieldDia").value)  || null,
+        mes:         parseInt(document.getElementById("fieldMes").value)  || null,
+        anio:        parseInt(document.getElementById("fieldAnio").value) || null,
+        universidad: document.getElementById("fieldUniversidad").value.trim(),
+        carrera:     document.getElementById("fieldCarrera").value.trim(),
+        semestre:    document.getElementById("fieldSemestre").value,
+      };
+
+      if (!payload.nombre) { showToast("⚠️ El nombre no puede estar vacío", true); return; }
+
+      try {
+        // PUT /perfil — actualiza datos del usuario (sin tocar puntos)
+        const res = await fetch(`${API_BASE}/perfil`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+          // Espera: { ok: true }
+        });
+        if (!res.ok) throw new Error();
+        originalData = { ...payload, puntos: originalData.puntos };
+        showToast("✓ Perfil actualizado correctamente");
+      } catch {
+        originalData = { ...payload, puntos: originalData.puntos };
+        showToast("✓ Perfil actualizado (demo)");
+        console.warn("FastAPI no disponible");
+      }
+    }
+
+    function cancelEdit() {
+      fillForm(originalData);
+      showToast("Cambios descartados");
+    }
+
+    // ── FOTO ─────────────────────────────────────────────
+    function handlePhotoChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhoto(e.target.result);
+        // TODO: subir al back
+        // const formData = new FormData();
+        // formData.append("foto", file);
+        // fetch(`${API_BASE}/perfil/foto`, { method: "POST", body: formData });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setPhoto(src) {
+      const circle = document.getElementById("photoCircle");
+      document.getElementById("photoInitials").style.display = "none";
+      const old = circle.querySelector("img");
+      if (old) old.remove();
+      const img = document.createElement("img");
+      img.src = src;
+      img.onerror = () => { img.remove(); document.getElementById("photoInitials").style.display = ""; };
+      circle.appendChild(img);
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.style.color = isError ? "#e74c3c" : "var(--gold-light)";
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 3000);
+    }
+
+    function toggleMenu() {
+      document.getElementById("mainMenu").classList.toggle("open");
+    }
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown"))
+        document.getElementById("mainMenu").classList.remove("open");
+    });
+  </script>
+
+</body>
+</html>

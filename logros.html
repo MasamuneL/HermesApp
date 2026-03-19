@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HERMES — Logros</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #f0d080;
+      --gold-dim: rgba(201,168,76,0.3);
+      --dark: #0a0a0c;
+      --text: #1a1408;
+      --muted: #9a8a6a;
+      --surface: #f9f7f3;
+      --border: #e8dcc8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #fff; color: var(--text);
+      font-family: 'Outfit', sans-serif; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    header {
+      background: #fff; border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .menu-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; background: transparent;
+      border: 1px solid var(--border); color: var(--muted);
+      font-family: 'Outfit', sans-serif; font-size: 12px;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; border-radius: 2px; transition: all 0.2s;
+    }
+    .menu-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .logo-area {
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; transition: opacity 0.2s; text-decoration: none;
+    }
+    .logo-area:hover { opacity: 0.75; }
+    .logo-img {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--white); border: 1px solid var(--gold-dim);
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+    }
+    .logo-img img { width: 100%; height: 100%; object-fit: cover; }
+    .logo-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 700; letter-spacing: 0.2em; color: var(--text);
+    }
+    .avatar-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--white); border: 2px solid var(--gold-dim);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s;
+    }
+    .avatar-btn:hover { border-color: var(--gold); }
+    .dropdown {
+      display: none; position: absolute; top: 72px; left: 32px;
+      background: #fff; border: 1px solid var(--border);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08); min-width: 200px; z-index: 200;
+    }
+    .dropdown.open { display: block; }
+    .dropdown a {
+      display: block; padding: 12px 20px; font-size: 12px;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text); text-decoration: none;
+      border-bottom: 1px solid var(--border); transition: background 0.15s, color 0.15s;
+    }
+    .dropdown a:last-child { border-bottom: none; }
+    .dropdown a:hover { background: var(--surface); color: var(--gold); }
+    .nav-bar {
+      padding: 12px 32px; background: var(--surface);
+      border-bottom: 1px solid var(--border); display: flex; gap: 12px;
+    }
+    .nav-link {
+      padding: 9px 20px; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted); background: transparent;
+      border: 1px solid transparent; border-radius: 2px;
+      cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--gold); border-color: var(--gold-dim);
+      background: rgba(201,168,76,0.05);
+    }
+    main {
+      max-width: 860px; margin: 0 auto;
+      padding: 48px 32px; width: 100%;
+      animation: fadeUp 0.5s ease forwards;
+    }
+    .page-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+    }
+    .page-label {
+      font-size: 11px; letter-spacing: 0.35em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+    }
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem; font-weight: 600; letter-spacing: 0.08em;
+    }
+    .points-card {
+      border: 1px solid var(--border); border-top: 2px solid var(--gold);
+      padding: 16px 24px; text-align: right; min-width: 160px;
+    }
+    .points-label {
+      font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 4px;
+    }
+    .points-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 700; color: var(--gold);
+      transition: all 0.3s;
+    }
+    .points-total { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .progress-section { margin-bottom: 32px; }
+    .progress-header {
+      display: flex; justify-content: space-between;
+      font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .progress-bar-bg {
+      height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--gold), var(--gold-light));
+      border-radius: 2px; transition: width 0.6s ease;
+    }
+    .filter-tabs {
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 7px 18px; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); cursor: pointer; border-radius: 2px; transition: all 0.2s;
+    }
+    .filter-tab.active, .filter-tab:hover {
+      background: var(--white); color: var(--gold-light); border-color: var(--gold-light);
+    }
+    .logro-card {
+      display: grid; grid-template-columns: 48px 1fr auto;
+      align-items: center; gap: 16px;
+      padding: 18px 20px; border: 1px solid var(--border);
+      border-left: 3px solid transparent; margin-bottom: 10px;
+      transition: all 0.25s ease; animation: fadeUp 0.4s ease forwards; opacity: 0;
+    }
+    .logro-card:hover { background: var(--surface); }
+    .logro-card.completado {
+      border-left-color: var(--gold); background: rgba(201,168,76,0.03);
+    }
+    .logro-card.completado .logro-titulo { text-decoration: line-through; color: var(--muted); }
+    .diff-badge {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0; border: 1px solid var(--border);
+    }
+    .diff-badge.facil   { background: #f0faf0; border-color: #b7e0b7; }
+    .diff-badge.medio   { background: #fffbf0; border-color: var(--border); }
+    .diff-badge.dificil { background: #fff5f0; border-color: #f0c8b0; }
+    .diff-badge.experto { background: #fdf0ff; border-color: #e0b0f0; }
+    .logro-info { min-width: 0; }
+    .logro-titulo {
+      font-size: 14px; font-weight: 500; color: var(--text);
+      margin-bottom: 4px; transition: color 0.2s;
+    }
+    .logro-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .logro-desc { font-size: 12px; color: var(--muted); }
+    .diff-label {
+      font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 10px; font-weight: 500;
+    }
+    .diff-label.facil   { background: #e8f5e8; color: #2d7a2d; }
+    .diff-label.medio   { background: #fef3e2; color: #b87a00; }
+    .diff-label.dificil { background: #fde8dc; color: #c0522b; }
+    .diff-label.experto { background: #f5e8ff; color: #7a2dc0; }
+    .logro-right {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0;
+    }
+    .logro-pts {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 700; color: var(--gold); white-space: nowrap;
+    }
+    .logro-pts span { font-size: 11px; color: var(--muted); font-family: 'Outfit', sans-serif; font-weight: 400; }
+    .toggle-done {
+      padding: 6px 14px; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      border-radius: 2px; cursor: pointer; transition: all 0.2s;
+      border: 1px solid; white-space: nowrap;
+    }
+    .toggle-done.pendiente { background: transparent; color: var(--muted); border-color: var(--border); }
+    .toggle-done.pendiente:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.05); }
+    .toggle-done.hecho { background: var(--white); color: var(--gold-light); border-color: var(--gold-light); }
+    .toggle-done.hecho:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+    .toggle-done:disabled { opacity: 0.4; cursor: not-allowed; }
+    .empty-state { text-align: center; padding: 64px 32px; color: var(--muted); }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+    .toast {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--white); color: var(--gold-light);
+      padding: 12px 28px; font-size: 13px; letter-spacing: 0.05em;
+      border: 1px solid var(--gold-dim); border-radius: 2px;
+      opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 500; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <button class="menu-btn" onclick="toggleMenu()">☰ Menú</button>
+    <a href="main.html" class="logo-area" style="text-decoration:none;">
+      <div class="logo-img">
+        <img src="LogoHermes.png" alt="H"
+          onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<span style=\'color:#c9a84c;font-size:18px;font-weight:700;\'>H</span>')" />
+      </div>
+      <span class="logo-name">HERMES</span>
+    </a>
+    <div class="avatar-btn" onclick="window.location.href='perfil.html'">
+      <span style="color:#c9a84c;font-size:16px;">👤</span>
+    </div>
+    <div class="dropdown" id="mainMenu">
+      <a href="main.html">🏠 Inicio</a>
+      <a href="perfil.html">👤 Perfil</a>
+      <a href="ranking.html">🏆 Ranking</a>
+      <a href="calendario.html">📅 Calendario</a>
+      <a href="logros.html">⭐ Logros</a>
+      <a href="login.html" style="color:#c0392b;">↩ Cerrar Sesión</a>
+    </div>
+  </header>
+ 
+  <div class="nav-bar">
+    <a class="nav-link" href="ranking.html">🏆 Ranking</a>
+    <a class="nav-link" href="calendario.html">📅 Calendario y Chat</a>
+    <a class="nav-link active" href="logros.html">⭐ Logros</a>
+  </div>
+ 
+  <main>
+    <div class="page-header">
+      <div>
+        <p class="page-label">Misiones y recompensas</p>
+        <h1 class="page-title">Logros</h1>
+      </div>
+      <div class="points-card">
+        <p class="points-label">Puntos acumulados</p>
+        <p class="points-value" id="ptsAcumulados">0</p>
+        <p class="points-total" id="ptsTotal">de 0 posibles</p>
+      </div>
+    </div>
+ 
+    <div class="progress-section">
+      <div class="progress-header">
+        <span>Progreso</span>
+        <span id="progressText">0 / 0 completados</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+ 
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="setFilter('todos', this)">Todos</button>
+      <button class="filter-tab" onclick="setFilter('pendiente', this)">Pendientes</button>
+      <button class="filter-tab" onclick="setFilter('completado', this)">Completados</button>
+      <button class="filter-tab" onclick="setFilter('facil', this)">🟢 Fácil</button>
+      <button class="filter-tab" onclick="setFilter('medio', this)">🟡 Medio</button>
+      <button class="filter-tab" onclick="setFilter('dificil', this)">🔴 Difícil</button>
+      <button class="filter-tab" onclick="setFilter('experto', this)">🟣 Experto</button>
+    </div>
+ 
+    <div id="logrosList"></div>
+  </main>
+ 
+  <div class="toast" id="toast"></div>
+ 
+  <script>
+    // ════════════════════════════════════════════════════
+    // CONFIG
+    // ════════════════════════════════════════════════════
+    const API_BASE = "http://localhost:8000";
+ 
+    const DIFF_CONFIG = {
+      facil:   { emoji: "📗", label: "Fácil",   pts: 50  },
+      medio:   { emoji: "📙", label: "Medio",   pts: 150 },
+      dificil: { emoji: "📕", label: "Difícil", pts: 300 },
+      experto: { emoji: "💎", label: "Experto", pts: 500 },
+    };
+ 
+    let logros = [
+      { id: 1, titulo: "Completa tu primer semana de clases",    descripcion: "Asiste todos los días de la primera semana", dificultad: "facil",   completado: false },
+      { id: 2, titulo: "Entrega 3 tareas a tiempo",              descripcion: "Sin retrasos ni extensiones",                dificultad: "facil",   completado: true  },
+      { id: 3, titulo: "Obtén 90+ en un examen parcial",         descripcion: "En cualquier materia del semestre",          dificultad: "medio",   completado: false },
+      { id: 4, titulo: "Completa un proyecto en equipo",         descripcion: "Mínimo 3 integrantes y entrega formal",      dificultad: "medio",   completado: false },
+      { id: 5, titulo: "No faltes en todo un mes",               descripcion: "Asistencia perfecta durante 30 días",        dificultad: "dificil", completado: false },
+      { id: 6, titulo: "Termina el semestre con promedio ≥ 9",   descripcion: "Promedio general al cierre del semestre",    dificultad: "dificil", completado: false },
+      { id: 7, titulo: "Publica un proyecto en GitHub",          descripcion: "Repositorio público con documentación",      dificultad: "experto", completado: false },
+      { id: 8, titulo: "Presenta en un congreso o evento",       descripcion: "Ponencia aceptada y presentada",             dificultad: "experto", completado: false },
+    ];
+ 
+    let currentFilter = "todos";
+ 
+    // ── CARGAR desde FastAPI ─────────────────────────────
+    async function loadLogros() {
+      try {
+        const res = await fetch(`${API_BASE}/logros`);
+        // Espera: [ { id, titulo, descripcion, dificultad, completado } ]
+        if (!res.ok) throw new Error();
+        logros = await res.json();
+      } catch {
+        console.warn("FastAPI no disponible — usando datos demo");
+      }
+      renderLogros();
+      updateStats();
+    }
+ 
+    // ── TOGGLE LOGRO ─────────────────────────────────────
+    async function toggleLogro(id) {
+      const logro = logros.find(l => l.id === id);
+      if (!logro) return;
+ 
+      // Deshabilita todos los botones mientras procesa
+      setAllButtonsDisabled(true);
+ 
+      const nuevoEstado = !logro.completado;
+ 
+      try {
+        // ── 1. PATCH /logros/{id} — actualiza el estado del logro ──
+        const resLogro = await fetch(`${API_BASE}/logros/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ completado: nuevoEstado })
+        });
+        if (!resLogro.ok) throw new Error(`Error al actualizar logro: ${resLogro.status}`);
+ 
+        // ── 2. Calcula nueva suma en el front ──────────────
+        logro.completado = nuevoEstado; // actualiza local antes de calcular
+        const nuevaSuma = logros
+          .filter(l => l.completado)
+          .reduce((s, l) => s + DIFF_CONFIG[l.dificultad].pts, 0);
+ 
+        // ── 3. PUT /perfil/puntos — guarda el total en la DB ──
+        const resPuntos = await fetch(`${API_BASE}/perfil/puntos`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ puntos: nuevaSuma })
+          // Espera: { ok: true }
+        });
+        if (!resPuntos.ok) throw new Error(`Error al guardar puntos: ${resPuntos.status}`);
+ 
+        // Toast de feedback
+        const pts = DIFF_CONFIG[logro.dificultad].pts;
+        showToast(nuevoEstado
+          ? `+${pts} pts — ¡Logro completado!`
+          : `Logro marcado como pendiente`
+        );
+ 
+      } catch (err) {
+        // Si el back falla, igual actualiza localmente (modo demo)
+        logro.completado = nuevoEstado;
+        console.warn("FastAPI no disponible — actualizando localmente:", err);
+        const pts = DIFF_CONFIG[logro.dificultad].pts;
+        showToast(nuevoEstado ? `+${pts} pts (demo)` : "Marcado como pendiente (demo)");
+      }
+ 
+      setAllButtonsDisabled(false);
+      renderLogros();
+      updateStats();
+    }
+ 
+    // ── RENDER ───────────────────────────────────────────
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+      btn.classList.add("active");
+      renderLogros();
+    }
+ 
+    function getFiltered() {
+      return logros.filter(l => {
+        if (currentFilter === "todos")      return true;
+        if (currentFilter === "pendiente")  return !l.completado;
+        if (currentFilter === "completado") return l.completado;
+        return l.dificultad === currentFilter;
+      });
+    }
+ 
+    function renderLogros() {
+      const list     = document.getElementById("logrosList");
+      const filtered = getFiltered();
+ 
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🏆</div>
+            <p>No hay logros en esta categoría</p>
+          </div>`;
+        return;
+      }
+ 
+      list.innerHTML = filtered.map((l, i) => {
+        const cfg   = DIFF_CONFIG[l.dificultad];
+        const clase = l.completado ? "completado" : "";
+        return `
+          <div class="logro-card ${clase}" style="animation-delay:${i * 0.05}s">
+            <div class="diff-badge ${l.dificultad}">${cfg.emoji}</div>
+            <div class="logro-info">
+              <div class="logro-titulo">${l.titulo}</div>
+              <div class="logro-meta">
+                <span class="logro-desc">${l.descripcion}</span>
+                <span class="diff-label ${l.dificultad}">${cfg.label}</span>
+              </div>
+            </div>
+            <div class="logro-right">
+              <div class="logro-pts">${cfg.pts} <span>pts</span></div>
+              <button
+                class="toggle-done ${l.completado ? 'hecho' : 'pendiente'}"
+                id="btn-logro-${l.id}"
+                onclick="toggleLogro(${l.id})"
+                title="${l.completado ? 'Marcar como pendiente' : 'Marcar como completado'}"
+              >
+                ${l.completado ? '✓ Hecho' : 'Marcar hecho'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+ 
+    function updateStats() {
+      const completados = logros.filter(l => l.completado);
+      const ptsAcum     = completados.reduce((s, l) => s + DIFF_CONFIG[l.dificultad].pts, 0);
+      const ptsTotal    = logros.reduce((s, l) => s + DIFF_CONFIG[l.dificultad].pts, 0);
+      const pct         = ptsTotal > 0 ? (ptsAcum / ptsTotal) * 100 : 0;
+ 
+      document.getElementById("ptsAcumulados").textContent = ptsAcum.toLocaleString();
+      document.getElementById("ptsTotal").textContent      = `de ${ptsTotal.toLocaleString()} posibles`;
+      document.getElementById("progressText").textContent  = `${completados.length} / ${logros.length} completados`;
+      document.getElementById("progressFill").style.width  = `${pct.toFixed(1)}%`;
+    }
+ 
+    function setAllButtonsDisabled(disabled) {
+      document.querySelectorAll(".toggle-done").forEach(b => b.disabled = disabled);
+    }
+ 
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 3000);
+    }
+ 
+    function toggleMenu() {
+      document.getElementById("mainMenu").classList.toggle("open");
+    }
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown"))
+        document.getElementById("mainMenu").classList.remove("open");
+    });
+ 
+    loadLogros();
+  </script>
+ 
+</body>
+</html>
