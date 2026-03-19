@@ -1,4 +1,4 @@
-# Hermes App - Asistente Escolar Unificado (v2.7)
+# Hermes App - Asistente Escolar
 **Documentación y Manual de Usuario**
 
 ## Descripción
