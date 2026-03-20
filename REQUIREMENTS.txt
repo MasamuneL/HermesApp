@@ -54,7 +54,7 @@ pygame
 
 
 # ==============================================================================
-# PARTE 2: HERRAMIENTAS QUE YA VIENEN DE FÁBRICA EN TU COMPU
+# PARTE 2: HERRAMIENTAS QUE YA SON NATIVAS DE PYTHON
 # ==============================================================================
 # (Estas líneas tienen un "#" al inicio para que el instalador las ignore 
 # y no marque error, ya que no hace falta descargarlas de internet).
