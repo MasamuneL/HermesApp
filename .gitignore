@@ -4,6 +4,10 @@
 # Credenciales de Firebase — nunca subir al repo
 firebase-credentials.json
 
+# Google Calendar OAuth — se generan automáticamente al autenticar
+token.json
+credentials.json
+
 # Python
 __pycache__/
 *.py[cod]
@@ -14,6 +18,21 @@ env/
 *.egg-info/
 dist/
 build/
+
+# Tests y cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Bases de datos locales (SQLite del prototipo HermesAgent)
+*.sqlite
+*.db
+
+# Logs
+*.log
+
+# Node (por si el frontend usa npm en el futuro)
+node_modules/
 
 # IDEs
 .vscode/
