@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HERMES — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+ 
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #f0d080;
+      --gold-dim: rgba(201,168,76,0.3);
+      --dark: #0a0a0c;
+      --text: #1a1408;
+      --muted: #9a8a6a;
+      --surface: #f9f7f3;
+      --border: #e8dcc8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #ffffff;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+    }
+ 
+    /* ── HEADER ── */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      animation: fadeDown 0.5s ease forwards;
+    }
+ 
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-img {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 1px solid var(--gold-dim);
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-img img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; }
+    .logo-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--text);
+    }
+ 
+    .menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .menu-btn:hover { border-color: var(--gold); color: var(--gold); }
+ 
+    .avatar-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 2px solid var(--gold-dim);
+      overflow: hidden;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s;
+    }
+    .avatar-btn:hover { border-color: var(--gold); }
+    .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-fallback { color: var(--gold); font-size: 16px; }
+ 
+    /* ── DROPDOWN MENU ── */
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: 72px; left: 32px;
+      background: #fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      min-width: 200px;
+      z-index: 200;
+      animation: fadeUp 0.2s ease forwards;
+    }
+    .dropdown.open { display: block; }
+    .dropdown a {
+      display: block;
+      padding: 12px 20px;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s, color 0.15s;
+    }
+    .dropdown a:last-child { border-bottom: none; }
+    .dropdown a:hover { background: var(--surface); color: var(--gold); }
+ 
+    /* ── NAV BUTTONS ── */
+    .nav-bar {
+      padding: 12px 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      animation: fadeDown 0.5s 0.05s ease forwards;
+      opacity: 0;
+    }
+    .nav-link {
+      padding: 9px 20px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--gold);
+      border-color: var(--gold-dim);
+      background: rgba(250,168,76,0.05);
+    }
+ 
+    /* ── MAIN CONTENT ── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 32px;
+    }
+ 
+    /* Welcome */
+    .welcome-section {
+      margin-bottom: 36px;
+      animation: fadeUp 0.5s 0.1s ease forwards;
+      opacity: 0;
+    }
+    .welcome-label {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .welcome-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.05em;
+    }
+    .welcome-title span { color: var(--gold); }
+    .welcome-sub {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+ 
+    /* Divider */
+    .gold-divider {
+      height: 1px;
+      background: linear-gradient(to right, var(--gold-dim), transparent);
+      margin-bottom: 32px;
+    }
+ 
+    /* Events panel */
+    .events-panel {
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--gold);
+      background: #fff;
+      animation: fadeUp 0.5s 0.2s ease forwards;
+      opacity: 0;
+    }
+ 
+    .panel-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .panel-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .tab {
+      padding: 5px 14px;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .tab.active, .tab:hover {
+      background: var(--white);
+      color: var(--gold-light);
+      border-color: var(--white);
+    }
+ 
+    /* Event items */
+    .event-list { padding: 8px 0; }
+    .event-item {
+      display: flex;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--surface);
+      gap: 16px;
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    .event-item:last-child { border-bottom: none; }
+    .event-item:hover { background: var(--surface); }
+ 
+    .event-time {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold);
+      min-width: 48px;
+      letter-spacing: 0.05em;
+    }
+    .event-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .event-name {
+      flex: 1;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .event-badge {
+      font-size: 10px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .badge-meeting { background: #fef3e2; color: #b87a00; }
+    .badge-deadline { background: #fde8e8; color: #c0392b; }
+ 
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+ 
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.5s 0.15s ease forwards;
+      opacity: 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, var(--gold), transparent);
+    }
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stat-unit {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+ 
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+ 
+  <!-- HEADER -->
+  <header>
+    <button class="menu-btn" onclick="toggleMenu()">
+      <span>☰</span> Menú
+    </button>
+    
+    <a href="main.html">
+        <div class="logo-area">
+            <div class="logo-img">
+                <img src="LogoHermes.png" alt="H"
+                    onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<span style=\'color:#c9a84c;font-size:18px;font-weight:700;\'>H</span>')" />
+            </div>
+            <span class="logo-name">HERMES</span>
+        </div>
+    </a>
+ 
+    <div class="avatar-btn" onclick="window.location.href='perfil.html'">
+      <span class="avatar-fallback">👤</span>
+    </div>
+ 
+    <!-- Dropdown -->
+    <div class="dropdown" id="mainMenu">
+      <a href="main.html">🏠 Inicio</a>
+      <a href="perfil.html">👤 Perfil</a>
+      <a href="ranking.html">🏆 Ranking</a>
+      <a href="calendario.html">📅 Calendario</a>
+      <a href="logros.html">⭐ Logros</a>
+      <a href="login.html" style="color:#c0392b;">↩ Cerrar Sesión</a>
+    </div>
+  </header>
+ 
+  <!-- NAV BAR -->
+  <div class="nav-bar">
+    <a class="nav-link active" href="ranking.html">🏆 Ranking</a>
+    <a class="nav-link" href="calendario.html">📅 Calendario y Chat</a>
+    <a class="nav-link" href="logros.html">⭐ Logros</a>
+  </div>
+ 
+  <!-- MAIN -->
+  <main>
+ 
+    <!-- Welcome -->
+    <div class="welcome-section">
+      <p class="welcome-label">Bienvenido de vuelta</p>
+      <h1 class="welcome-title">Buenos días, <span id="userName">Usuario</span></h1>
+      <p class="welcome-sub" id="welcomeSub">Cargando eventos...</p>
+    </div>
+ 
+    <div class="gold-divider"></div>
+ 
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <p class="stat-label">Eventos hoy</p>
+        <p class="stat-value" id="statHoy">—</p>
+        <p class="stat-unit">pendientes</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Eventos mañana</p>
+        <p class="stat-value" id="statManana">—</p>
+        <p class="stat-unit">programados</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Logros</p>
+        <p class="stat-value">—</p>
+        <p class="stat-unit">desbloqueados</p>
+      </div>
+    </div>
+ 
+    <!-- Events panel -->
+    <div class="events-panel">
+      <div class="panel-header">
+        <span class="panel-title">Eventos Próximos</span>
+        <div class="panel-tabs">
+          <button class="tab active" onclick="filterEvents('hoy', this)">Hoy</button>
+          <button class="tab" onclick="filterEvents('manana', this)">Mañana</button>
+          <button class="tab" onclick="filterEvents('todos', this)">Todos</button>
+        </div>
+      </div>
+      <div class="event-list" id="eventList"></div>
+    </div>
+ 
+  </main>
+ 
+  <script>
+    const events = [
+      { time: "09:00", name: "Reunión de equipo",    day: "hoy",    type: "meeting"  },
+      { time: "12:30", name: "Entrega de proyecto",  day: "hoy",    type: "deadline" },
+      { time: "08:00", name: "Revisión semanal",     day: "manana", type: "meeting"  },
+      { time: "15:00", name: "Presentación final",   day: "manana", type: "deadline" },
+    ];
+ 
+    let currentFilter = "hoy";
+ 
+    function renderEvents(filter) {
+      const list = document.getElementById("eventList");
+      const filtered = filter === "todos" ? events : events.filter(e => e.day === filter);
+ 
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty-state">No hay eventos para este período</div>`;
+        return;
+      }
+ 
+      list.innerHTML = filtered.map(e => `
+        <div class="event-item">
+          <span class="event-time">${e.time}</span>
+          <div class="event-dot" style="background:${e.type === 'deadline' ? '#c0392b' : '#c9a84c'}"></div>
+          <span class="event-name">${e.name}</span>
+          <span class="event-badge ${e.type === 'deadline' ? 'badge-deadline' : 'badge-meeting'}">
+            ${e.type === 'deadline' ? 'Entrega' : 'Reunión'}
+          </span>
+        </div>
+      `).join('');
+    }
+ 
+    function filterEvents(day, btn) {
+      currentFilter = day;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderEvents(day);
+    }
+ 
+    function updateStats() {
+      document.getElementById("statHoy").textContent = events.filter(e => e.day === "hoy").length;
+      document.getElementById("statManana").textContent = events.filter(e => e.day === "manana").length;
+      const sub = events.filter(e => e.day === "hoy").length;
+      document.getElementById("welcomeSub").textContent =
+        sub > 0 ? `Tienes ${sub} evento${sub > 1 ? 's' : ''} pendiente${sub > 1 ? 's' : ''} hoy`
+                : "No tienes eventos pendientes hoy";
+    }
+ 
+    function toggleMenu() {
+      document.getElementById("mainMenu").classList.toggle("open");
+    }
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown")) {
+        document.getElementById("mainMenu").classList.remove("open");
+      }
+    });
+ 
+    // import { getAuth, onAuthStateChanged } from "firebase/auth";
+    // onAuthStateChanged(auth, user => {
+    //   if (user) document.getElementById("userName").textContent = user.displayName || user.email;
+    //   else window.location.href = "login.html";
+    // });
+ 
+    renderEvents("hoy");
+    updateStats();
+  </script>
+ 
+</body>
+</html>

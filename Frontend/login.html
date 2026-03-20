@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HERMES — Iniciar Sesión</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+ 
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #f0d080;
+      --gold-dim: rgba(201,168,76,0.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      padding: 48px 40px;
+    }
+    .logo-circle {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 2px solid var(--gold-light);
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(201,168,76,0.2);
+      animation: fadeDown 0.6s ease forwards;
+    }
+    .logo-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #1a1408;
+      letter-spacing: 0.2em;
+      animation: fadeUp 0.6s 0.1s ease forwards;
+      opacity: 0;
+    }
+    .subtitle {
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #9a8a6a;
+      margin-top: 6px;
+      margin-bottom: 44px;
+      animation: fadeUp 0.6s 0.15s ease forwards;
+      opacity: 0;
+    }
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-light), transparent);
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s 0.2s ease forwards;
+      opacity: 0;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 15px 24px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border-radius: 2px;
+    }
+    .btn-primary {
+      background: transparent;
+      color: rgb(100,100,100);
+      border: 2px solid var(--gold-light);
+      margin-bottom: 14px;
+      animation: fadeUp 0.6s 0.25s ease forwards;
+      opacity: 0;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      color: #0a0a0c;
+      box-shadow: 0 6px 24px rgba(201,168,76,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #1a1408;
+      border: 1px solid #d0c0a0;
+      animation: fadeUp 0.6s 0.3s ease forwards;
+      opacity: 0;
+    }
+    .btn-secondary:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.05);
+    }
+    .footer-text {
+      margin-top: 36px;
+      font-size: 10px;
+      color: #ccc0aa;
+      letter-spacing: 0.1em;
+      animation: fadeUp 0.6s 0.4s ease forwards;
+      opacity: 0;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-14px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+  </style>
+</head>
+<body>
+ 
+  <div class="card">
+ 
+    <div class="logo-circle">
+      <img src="LogoHermes.png" alt="HERMES"
+        onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<span style=\'font-family:Cormorant Garamond,serif;font-size:36px;color:#c9a84c;font-weight:600;\'>H</span>')" />
+    </div>
+ 
+    <h1>HERMES</h1>
+    <p class="subtitle">Sistema de Gestión</p>
+ 
+    <div class="divider"></div>
+ 
+    <button class="btn btn-primary" onclick="handleLogin()">Iniciar Sesión</button>
+    <button class="btn btn-secondary" onclick="handleSignup()">Crear Cuenta</button>
+ 
+    <p class="footer-text">Powered by Firebase Auth</p>
+  </div>
+ 
+  <script>
+    // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-app.js";
+    // import { getAuth, signInWithEmailAndPassword } from "...";
+    // const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "..." };
+    // const app = initializeApp(firebaseConfig);
+    // const auth = getAuth(app);
+ 
+    function handleLogin() {
+      // auth.signInWithEmailAndPassword(email, password)
+      //   .then(() => window.location.href = "main.html")
+      console.log("Login — conectar Firebase Auth");
+      window.location.href = "main.html";
+    }
+ 
+    function handleSignup() {
+      // window.location.href = "signup.html";
+      console.log("Sign Up — conectar Firebase Auth");
+    }
+  </script>
+</body>
+</html>
