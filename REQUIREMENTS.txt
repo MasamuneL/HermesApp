@@ -84,47 +84,4 @@ gTTS
 # ------------------------------------------------------------------------------
 pygame
 
-
-# ==============================================================================
-# PARTE 2: LIBRERIAS NATIVAS DE PYTHON (INFORMATIVAS)
-# ==============================================================================
-# IMPORTANTE: Las siguientes librerias YA VIENEN PREINSTALADAS con Python. 
-# NO necesitan instalarse con pip (por eso estan comentadas abajo). 
-# Si tu sistema marca error indicando que no las posee, significa que tu 
-# instalacion de Python esta corrupta y debes reinstalar Python desde cero.
-# ==============================================================================
-
-# ------------------------------------------------------------------------------
-# A. INTERFAZ GRAFICA (GUI)
-# Descripcion: Framework estandar de Python para crear ventanas y botones.
-# Utilidad: Crea toda la aplicacion visual (tk, ttk, scrolledtext, filedialog).
-# ------------------------------------------------------------------------------
- tkinter
-
-# ------------------------------------------------------------------------------
-# B. GESTION DEL SISTEMA OPERATIVO Y RUTAS
-# Descripcion: Modulos para interactuar con tu computadora y directorios.
-# Utilidad: Permiten buscar rutas, guardar archivos temporales y cerrar la app.
-# ------------------------------------------------------------------------------
- os
- sys
-
-# ------------------------------------------------------------------------------
-# C. PROCESAMIENTO DE DATOS Y EXPRESIONES
-# Descripcion: Herramientas de formateo e interpretacion de datos crudos.
-# Utilidad: "json" decodifica los datos extraidos por la IA; "re" (Regex) 
-# limpia textos extraños; y "uuid" crea claves unicas e irrepetibles para la DB.
-# ------------------------------------------------------------------------------
- json
- re
- uuid
-
-# ------------------------------------------------------------------------------
-# D. TIEMPO Y MULTIHILO (CONCURRENCIA)
-# Descripcion: Modulos para manejar pausas y ejecutar tareas en paralelo.
-# Utilidad: "threading" hace que la IA y el audio corran en segundo plano sin 
-# trabar la ventana de la app. "time" y "datetime" manejan esperas y registros.
-# ------------------------------------------------------------------------------
- threading
- time
- datetime
+uuid
