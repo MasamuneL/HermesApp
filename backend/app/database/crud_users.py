@@ -5,8 +5,8 @@ Funciones para crear, leer, actualizar y borrar usuarios
 """
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.user import User
-from app.models.ranking import Ranking
+from app.database.user import User
+from app.database.ranking import Ranking
 from typing import Optional, List
 import uuid
 

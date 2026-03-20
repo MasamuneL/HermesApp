@@ -1,87 +1,92 @@
 # ==============================================================================
-# ARCHIVO DE REQUISITOS E IMPORTACIONES - HERMES APP (v2.7)
+# HERMES APP — Dependencias Python
 # ==============================================================================
-# Instrucciones de instalacion:
-# Abre la terminal en la misma carpeta donde guardaste este archivo y ejecuta:
-# pip install -r REQUISITOS.txt
+# Instalar con:
+#   pip install -r REQUIREMENTS.txt
+#
+# Nota: uuid, json, hashlib, datetime, os, re, sys, threading,
+#       typing y tkinter son parte de la librería estándar de Python 3
+#       y NO necesitan instalarse con pip.
+#       En Linux, tkinter requiere: sudo apt install python3-tk
 # ==============================================================================
 
 
+# ------------------------------------------------------------------------------
+# Framework web y servidor ASGI
+# ------------------------------------------------------------------------------
+fastapi>=0.135.1
+uvicorn[standard]>=0.42.0
+
+
+# ------------------------------------------------------------------------------
+# Validación de datos — Pydantic v2
+# Usado directamente en todos los schemas (schemas/users.py, chat.py, etc.)
+# ------------------------------------------------------------------------------
+pydantic>=2.12.5
+
+
+# ------------------------------------------------------------------------------
+# Base de datos — PostgreSQL async
+# SQLAlchemy 2.0 con soporte async + driver asyncpg para PostgreSQL
+# ------------------------------------------------------------------------------
+sqlalchemy[asyncio]>=2.0.48
+asyncpg>=0.31.0
+
+
+# ------------------------------------------------------------------------------
+# Cache y ranking en tiempo real — Redis async
+# Usado en redis_operations.py para cache de chat, ranking (Sorted Sets) y sesiones
+# ------------------------------------------------------------------------------
+redis[hiredis]>=7.3.0
+
+
+# ------------------------------------------------------------------------------
+# Autenticación — Firebase Admin SDK
+# Verifica tokens de Firebase Auth (Google OAuth + email/password)
+# ------------------------------------------------------------------------------
+firebase-admin>=7.3.0
+
+
+# ------------------------------------------------------------------------------
+# Variables de entorno
+# Lee el archivo .env para DATABASE_URL, REDIS_URL, GEMINI_API_KEY, etc.
+# ------------------------------------------------------------------------------
+python-dotenv>=1.2.2
+
+
+# ------------------------------------------------------------------------------
+# Google Calendar API
+# OAuth2 + cliente de la API para leer y crear eventos del calendario del usuario
+# Usado en quickstart.py (Alan + Ángel)
+# ------------------------------------------------------------------------------
+google-auth>=2.49.1
+google-auth-oauthlib>=1.3.0
+google-api-python-client>=2.193.0
+
+
+# ------------------------------------------------------------------------------
+# Google Gemini (IA)
+# SDK oficial para conectar con Gemini 2.0 Flash (chatbot + function calling)
+# Usado en services/llm_orchestrator.py y services/gemini_agent.py (Víctor)
+# También usado en HermesAgent/hermes_app.py (prototipo)
+# ------------------------------------------------------------------------------
+google-genai>=1.68.0
+
+
 # ==============================================================================
-# PARTE 1: LIBRERIAS DE TERCEROS (ESTAS SI SE INSTALAN CON PIP)
+# PROTOTIPO DE ESCRITORIO — HermesAgent (backend/app/HermesAgent/hermes_app.py)
+# Solo necesario si quieres correr el prototipo local de Víctor.
+# El servidor FastAPI NO requiere estas librerías.
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-# 1. SDK OFICIAL DE GOOGLE GEMINI
-# Descripcion: Es la libreria oficial y mas moderna de Google para conectar 
-# aplicaciones de Python con los modelos de Inteligencia Artificial.
-# Utilidad en el codigo: Permite crear el cliente (genai.Client), enviar los 
-# prompts de texto, subir la foto del horario escolar a la nube de Google 
-# (File API) y mantener la memoria de la conversacion.
-# ------------------------------------------------------------------------------
-google-genai
+# Síntesis de voz (texto → audio .mp3)
+gTTS>=2.5.4
 
-# ------------------------------------------------------------------------------
-# 2. GESTOR DE VARIABLES DE ENTORNO
-# Descripcion: Herramienta de seguridad para ocultar datos sensibles.
-# Utilidad en el codigo: Busca y lee el archivo oculto ".env" para extraer tu 
-# GOOGLE_API_KEY. Esto evita que tu contrasena quede expuesta directamente 
-# dentro del codigo fuente (hermes_app.py).
-# ------------------------------------------------------------------------------
-python-dotenv
+# Reproducción de audio en segundo plano
+pygame>=2.6.1
 
-# ------------------------------------------------------------------------------
-# 3. MAPEO OBJETO-RELACIONAL (ORM) PARA BASE DE DATOS
-# Descripcion: Es una libreria avanzada para gestionar bases de datos SQL 
-# usando programacion orientada a objetos en lugar de consultas manuales.
-# Utilidad en el codigo: Se encarga de crear el archivo "hermes_unificado.sqlite", 
-# construir las tablas de usuarios y clases, y guardar la informacion que 
-# la IA extrae de tu horario de forma segura y estructurada.
-# ------------------------------------------------------------------------------
-SQLAlchemy
+# Captura de micrófono
+sounddevice>=0.5.5
 
-# ------------------------------------------------------------------------------
-# 4. CAPTURA DE AUDIO (MICROFONO)
-# Descripcion: Modulo para grabar y procesar audio de hardware en tiempo real.
-# Utilidad en el codigo: Enciende tu microfono cuando presionas el boton "Voz", 
-# graba lo que dices durante 5 segundos y lo mantiene en la memoria de la PC.
-# ------------------------------------------------------------------------------
-sounddevice
-
-# ------------------------------------------------------------------------------
-# 5. PROCESAMIENTO MATEMATICO DE MATRICES
-# Descripcion: Libreria fundamental para calculos cientificos y arrays.
-# Utilidad en el codigo: El audio que captura "sounddevice" no es sonido puro, 
-# son miles de numeros (frecuencias). Numpy procesa esta inmensa matriz de 
-# numeros casi al instante para que no se congele tu computadora.
-# ------------------------------------------------------------------------------
-numpy
-
-# ------------------------------------------------------------------------------
-# 6. CONVERSION DE AUDIO CIENTIFICO
-# Descripcion: Modulo del ecosistema SciPy para interactuar con archivos.
-# Utilidad en el codigo: Toma la matriz de numeros que genero Numpy y la 
-# "empaqueta" para construir y guardar un archivo de audio real (.wav) 
-# que posteriormente se envia a la Inteligencia Artificial.
-# ------------------------------------------------------------------------------
-scipy
-
-# ------------------------------------------------------------------------------
-# 7. SINTESIS DE VOZ DE GOOGLE (TEXT-TO-SPEECH)
-# Descripcion: Herramienta que traduce texto escrito a lenguaje hablado.
-# Utilidad en el codigo: Cuando la IA responde con un mensaje de texto, gTTS 
-# toma esas palabras y genera un archivo de audio (.mp3) con la voz del 
-# asistente (Hermes) para que puedas escucharlo.
-# ------------------------------------------------------------------------------
-gTTS
-
-# ------------------------------------------------------------------------------
-# 8. REPRODUCTOR MULTIMEDIA ASINCRONO
-# Descripcion: Modulo de audio extraido de una libreria de creacion de juegos.
-# Utilidad en el codigo: Se encarga de reproducir en las bocinas el archivo 
-# .mp3 que genero gTTS. Se utiliza esta libreria porque permite reproducir 
-# el sonido "de fondo" sin bloquear ni congelar la interfaz grafica.
-# ------------------------------------------------------------------------------
-pygame
-
-uuid
+# Procesamiento matemático de audio (requerido por sounddevice)
+scipy>=1.17.1
