@@ -1,0 +1,25 @@
+# Variables de entorno — contienen contraseñas y API keys
+.env
+
+# Credenciales de Firebase — nunca subir al repo
+firebase-credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
