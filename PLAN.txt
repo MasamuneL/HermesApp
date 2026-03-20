@@ -11,34 +11,35 @@ OPINION SOBRE EL ESTADO DEL REPO (sé honesto contigo)
 El repo NO está listo todavía. Está más organizado que antes,
 pero hay problemas que bloquean la integración:
 
-  PROBLEMA 1 — Branches sin mergear a main
+  PROBLEMA 1 — Branches sin mergear a main ✓ RESUELTO (20 mar)
     Todo el trabajo está fragmentado en ramas separadas que
     nunca se han unido. main está prácticamente vacío.
     Ramas pendientes de mergear (en orden):
-      - angel/database-models  → modelos de DB
-      - Schemas                → schemas Pydantic + routers
-      - oswaldo/frontend       → frontend de Oswaldo
-      - oscar_ci/cd            → CI/CD de Dennis y Oscar
+      - angel/database-models  → modelos de DB          ✓
+      - Schemas                → schemas Pydantic + routers ✓
+      - Hermes_AppV0.0.2       → prototipo Gemini de Víctor ✓
+      - oswaldo/frontend       → frontend de Oswaldo    ✓
+      - oscar_ci/cd            → CI/CD (pendiente aún)
 
-  PROBLEMA 2 — README.md desactualizado
+  PROBLEMA 2 — README.md desactualizado ✓ RESUELTO (20 mar)
     Menciona LangGraph (ya no se usa), Gemini 3.0 Flash
     (es 2.0 Flash), estructura de carpetas incorrecta,
     y una URL de git clone con corchetes mal puesta.
 
-  PROBLEMA 3 — No existe .env.example
+  PROBLEMA 3 — No existe .env.example ✓ RESUELTO (20 mar)
     Cada integrante del equipo no sabe qué variables de
     entorno necesita configurar (DB, Redis, Firebase, Gemini).
 
-  PROBLEMA 4 — No existe docker-compose.yml
+  PROBLEMA 4 — No existe docker-compose.yml (pendiente Dennis)
     Fue borrado en un commit anterior. Sin él, nadie puede
     levantar PostgreSQL y Redis localmente de forma fácil.
 
-  PROBLEMA 5 — Firebase Admin SDK no inicializado
+  PROBLEMA 5 — Firebase Admin SDK no inicializado ✓ RESUELTO (20 mar)
     Los routers ya verifican tokens de Firebase, pero
     firebase_admin.initialize_app() no está llamado en
     ningún lado todavía.
 
-  PROBLEMA 6 — Frontend solo tiene mockups (imágenes JPEG/PNG)
+  PROBLEMA 6 — Frontend solo tiene mockups (imágenes JPEG/PNG) ✓ RESUELTO (20 mar)
     El trabajo real de Oswaldo está en su branch sin mergear.
 
   LO QUE SÍ ESTÁ BIEN:
@@ -55,37 +56,32 @@ PLAN DÍA A DÍA
 
 JUEVES 19 MARZO — Arreglar el repo (Alan + todos)
 --------------------------------------------------
-  [ ] Alan mergea las branches en este orden a main:
+  [✓] Alan mergea las branches en este orden a main:
         1. angel/database-models
         2. Schemas (contiene routers + main.py)
-        3. oswaldo/frontend
-        4. oscar_ci/cd
-      IMPORTANTE: resolver conflictos antes de mergear el siguiente.
+        3. Hermes_AppV0.0.2 (prototipo Gemini de Víctor)
+        4. oswaldo/frontend
+        (oscar_ci/cd pendiente aún)
 
-  [ ] Alan crea .env.example en la raíz del repo con estas variables:
-        DATABASE_URL=postgresql+asyncpg://usuario:password@localhost:5432/hermes_db
-        REDIS_URL=redis://localhost:6379/0
-        GEMINI_API_KEY=tu_api_key_aqui
-        FIREBASE_CREDENTIALS_PATH=./firebase-credentials.json
+  [✓] Alan crea .env.example en la raíz del repo con estas variables:
+        DATABASE_URL, REDIS_URL, GEMINI_API_KEY, FIREBASE_CREDENTIALS_PATH
 
   [ ] Dennis/Oscar restauran docker-compose.yml con:
         - Servicio PostgreSQL 16
         - Servicio Redis 7
         - Volúmenes persistentes
 
-  [ ] Actualizar README.md con la estructura real del proyecto
-      (quitar referencias a LangGraph, corregir versión de Gemini,
-      corregir URL del repo, actualizar pasos de instalación).
+  [✓] Actualizar README.md con la estructura real del proyecto
+      (corregir versión de Gemini 3.0 → 2.5 Flash, typos, pasos de instalación).
 
 
 VIERNES 20 MARZO — Firebase + Gemini (Víctor + Alan)
 -----------------------------------------------------
-  [ ] Víctor configura Firebase Admin SDK:
-        - Descargar firebase-credentials.json desde Firebase Console
-        - Agregar firebase_admin.initialize_app() en main.py
-        - Agregar firebase-credentials.json al .gitignore
+  [✓] Firebase Admin SDK ya inicializado en main.py (resuelto con merge de Schemas)
+        - firebase_admin.initialize_app() en main.py ✓
+        - firebase-credentials.json en .gitignore ✓
 
-  [ ] Víctor implementa llm_orchestrator.py con Gemini 2.0 Flash:
+  [ ] Víctor implementa llm_orchestrator.py con Gemini 2.5 Flash:
         - Recibe mensaje del usuario + user_id
         - Llama a Gemini con function calling
         - Retorna {"response": "...", "intent": "..."}
@@ -94,10 +90,10 @@ VIERNES 20 MARZO — Firebase + Gemini (Víctor + Alan)
   [ ] Víctor implementa gemini_agent.py y action_tools.py
       (las funciones que Gemini puede ejecutar via function calling)
 
-  [ ] Alan/Ángel configuran Google Calendar API:
-        - OAuth credentials para vincular cuenta Google del usuario
-        - Endpoint GET /api/calendar/events (leer eventos)
-        - Endpoint POST /api/calendar/events (crear evento desde OCR)
+  [✓] Alan configura Google Calendar API:
+        - Endpoint GET /api/calendar/events (leer eventos) ✓
+        - Endpoint POST /api/calendar/events (crear evento desde OCR) ✓
+        - Frontend debe enviar X-Google-Token con el Google access token de Firebase
 
 
 SÁBADO 21 MARZO — Frontend conectado al backend (Oswaldo + Álvaro)
