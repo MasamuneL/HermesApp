@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from app.routers import users, ranking, chat, logros
+from app.routers import users, ranking, chat, logros, calendar
 
 load_dotenv()
 
@@ -33,6 +33,7 @@ app.include_router(users.router)
 app.include_router(ranking.router)
 app.include_router(chat.router)
 app.include_router(logros.router)
+app.include_router(calendar.router)
 
 
 @app.get("/")
