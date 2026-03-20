@@ -44,7 +44,7 @@ HermesApp/
 │       │   ├── users.py
 │       │   ├── ranking.py
 │       │   ├── chat.py
-│       │   └── achivements.py
+│       │   └── achievements.py
 │       ├── routers/             # Endpoints de la API
 │       │   ├── users.py         # /api/users
 │       │   ├── ranking.py       # /api/ranking
