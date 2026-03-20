@@ -1,87 +1,86 @@
 # ==============================================================================
-# ARCHIVO DE REQUISITOS E IMPORTACIONES - HERMES APP (v2.7)
+# REQUISITOS - HERMES APP
 # ==============================================================================
-# Instrucciones de instalacion:
-# Abre la terminal en la misma carpeta donde guardaste este archivo y ejecuta:
+# Instrucciones:
+# Abrir la terminal en esta misma carpeta y ejecutar:
 # pip install -r REQUISITOS.txt
 # ==============================================================================
 
-
 # ==============================================================================
-# PARTE 1: LIBRERIAS DE TERCEROS (ESTAS SI SE INSTALAN CON PIP)
+# PARTE 1: HERRAMIENTAS A DESCARGAR E INSTALAR
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-# 1. SDK OFICIAL DE GOOGLE GEMINI
-# Descripcion: Es la libreria oficial y mas moderna de Google para conectar 
-# aplicaciones de Python con los modelos de Inteligencia Artificial.
-# Utilidad en el codigo: Permite crear el cliente (genai.Client), enviar los 
-# prompts de texto, subir la foto del horario escolar a la nube de Google 
-# (File API) y mantener la memoria de la conversacion.
-# ------------------------------------------------------------------------------
+# 1. google-genai
+# Es la parte central del asistente. Conecta la computadora con la inteligencia 
+# artificial de Google para que pueda leer, escuchar y ver el horario.
 google-genai
 
-# ------------------------------------------------------------------------------
-# 2. GESTOR DE VARIABLES DE ENTORNO
-# Descripcion: Herramienta de seguridad para ocultar datos sensibles.
-# Utilidad en el codigo: Busca y lee el archivo oculto ".env" para extraer tu 
-# GOOGLE_API_KEY. Esto evita que tu contrasena quede expuesta directamente 
-# dentro del codigo fuente (hermes_app.py).
-# ------------------------------------------------------------------------------
+# 2. python-dotenv
+# Almacen de KEY API. Sirve para esconder la clave secreta de Google 
+# y evitar que quede a la vista de todos dentro del código.
 python-dotenv
 
-# ------------------------------------------------------------------------------
-# 3. MAPEO OBJETO-RELACIONAL (ORM) PARA BASE DE DATOS
-# Descripcion: Es una libreria avanzada para gestionar bases de datos SQL 
-# usando programacion orientada a objetos en lugar de consultas manuales.
-# Utilidad en el codigo: Se encarga de crear el archivo "hermes_unificado.sqlite", 
-# construir las tablas de usuarios y clases, y guardar la informacion que 
-# la IA extrae de tu horario de forma segura y estructurada.
-# ------------------------------------------------------------------------------
+# 3. SQLAlchemy
+# Es el organizador de la información. Guarda las materias, horarios y 
+# maestros en un archivo seguro de forma automática y ordenada.
 SQLAlchemy
 
-# ------------------------------------------------------------------------------
-# 4. CAPTURA DE AUDIO (MICROFONO)
-# Descripcion: Modulo para grabar y procesar audio de hardware en tiempo real.
-# Utilidad en el codigo: Enciende tu microfono cuando presionas el boton "Voz", 
-# graba lo que dices durante 5 segundos y lo mantiene en la memoria de la PC.
-# ------------------------------------------------------------------------------
+# 4. sounddevice
+# Es la grabadora del programa. Enciende el micrófono del equipo 
+# para escuchar la voz cuando quieres hablar con el asistente.
 sounddevice
 
-# ------------------------------------------------------------------------------
-# 5. PROCESAMIENTO MATEMATICO DE MATRICES
-# Descripcion: Libreria fundamental para calculos cientificos y arrays.
-# Utilidad en el codigo: El audio que captura "sounddevice" no es sonido puro, 
-# son miles de numeros (frecuencias). Numpy procesa esta inmensa matriz de 
-# numeros casi al instante para que no se congele tu computadora.
-# ------------------------------------------------------------------------------
+# 5. numpy
+# Calculadora potente. El sonido de la voz se traduce 
+# en miles de números, esta herramienta los procesa casi al instante para 
+# que la aplicación no se trabe.
 numpy
 
-# ------------------------------------------------------------------------------
-# 6. CONVERSION DE AUDIO CIENTIFICO
-# Descripcion: Modulo del ecosistema SciPy para interactuar con archivos.
-# Utilidad en el codigo: Toma la matriz de numeros que genero Numpy y la 
-# "empaqueta" para construir y guardar un archivo de audio real (.wav) 
-# que posteriormente se envia a la Inteligencia Artificial.
-# ------------------------------------------------------------------------------
+# 6. scipy
+# Es el creador de archivos. Toma los números del audio que capturó el 
+# micrófono y los convierte en un archivo de voz normal (.wav) que la 
+# IA sí puede entender.
 scipy
 
-# ------------------------------------------------------------------------------
-# 7. SINTESIS DE VOZ DE GOOGLE (TEXT-TO-SPEECH)
-# Descripcion: Herramienta que traduce texto escrito a lenguaje hablado.
-# Utilidad en el codigo: Cuando la IA responde con un mensaje de texto, gTTS 
-# toma esas palabras y genera un archivo de audio (.mp3) con la voz del 
-# asistente (Hermes) para que puedas escucharlo.
-# ------------------------------------------------------------------------------
+# 7. gTTS
+# Son las cuerdas vocales del asistente. Toma las respuestas escritas 
+# de la inteligencia artificial y las lee en voz alta.
 gTTS
 
-# ------------------------------------------------------------------------------
-# 8. REPRODUCTOR MULTIMEDIA ASINCRONO
-# Descripcion: Modulo de audio extraido de una libreria de creacion de juegos.
-# Utilidad en el codigo: Se encarga de reproducir en las bocinas el archivo 
-# .mp3 que genero gTTS. Se utiliza esta libreria porque permite reproducir 
-# el sonido "de fondo" sin bloquear ni congelar la interfaz grafica.
-# ------------------------------------------------------------------------------
+# 8. pygame
+# Es el reproductor multimedia. Hace que se escuche la voz del asistente 
+# por las bocinas mientras se continua usando la ventana sin interrupciones.
 pygame
 
-uuid
+
+# ==============================================================================
+# PARTE 2: HERRAMIENTAS QUE YA VIENEN DE FÁBRICA EN TU COMPU
+# ==============================================================================
+# (Estas líneas tienen un "#" al inicio para que el instalador las ignore 
+# y no marque error, ya que no hace falta descargarlas de internet).
+# ==============================================================================
+
+# tkinter
+# Dibuja las ventanas, los botones y los textos en tu pantalla.
+
+# os y sys
+# Le ayudan al programa a moverse por las carpetas de tu compu y a 
+# cerrarse correctamente cuando terminas.
+
+# json
+# Traduce la información del horario para poder guardarla bien ordenadita.
+
+# re
+# Es un borrador mágico que limpia el texto para que se lea bonito y sin 
+# símbolos raros.
+
+# uuid
+# Le pone una etiqueta o código único a cada cosa para que no se revuelvan 
+# los datos.
+
+# threading
+# Hace que el programa pueda hacer varias cosas a la vez, como hablarte y 
+# buscar información, sin quedarse pasmado o congelado.
+
+# time y datetime
+# Llevan el control del reloj y de los tiempos de espera del programa.
