@@ -6,7 +6,7 @@ Hermes es una aplicación web para estudiantes universitarios. Transforma horari
 
 1. **Login** — El usuario entra con Google o email/password a través de Firebase Auth.
 2. **Captura** — Sube una foto de su horario en papel.
-3. **Procesamiento** — Gemini 3.0 Flash lee la imagen y extrae materias, horarios y salones.
+3. **Procesamiento** — Gemini 2.5 Flash lee la imagen y extrae materias, horarios y salones.
 4. **Calendario** — La información se sincroniza en Google Calendar automáticamente.
 5. **Motivación** — El sistema asigna puntos por actividad y muestra un ranking en tiempo real.
 
@@ -19,7 +19,7 @@ Hermes es una aplicación web para estudiantes universitarios. Transforma horari
 | Frontend | HTML5 + Tailwind CSS + TypeScript (sin framework) |
 | Backend | Python 3.11+ + FastAPI (async) |
 | Auth | Firebase Auth (Google OAuth + email/password) |
-| IA | Google Gemini 3.0 Flash (chat + OCR de horarios) |
+| IA | Google Gemini 2.5 Flash (chat + OCR de horarios) |
 | Calendario | Google Calendar API |
 | Base de datos principal | PostgreSQL 16 (SQLAlchemy 2.0 async) |
 | Cache y ranking | Redis 7 (sorted sets para leaderboard) |
