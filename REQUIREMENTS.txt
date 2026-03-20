@@ -13,48 +13,48 @@
 # 1. google-genai
 # Es la parte central del asistente. Conecta la computadora con la inteligencia 
 # artificial de Google para que pueda leer, escuchar y ver el horario.
-google-genai
+google-genai==0.5.0
 
 # 2. python-dotenv
 # Almacen de KEY API. Sirve para esconder la clave secreta de Google 
 # y evitar que quede a la vista de todos dentro del código.
-python-dotenv
+python-dotenv==1.0.1
 
 # 3. SQLAlchemy
 # Es el organizador de la información. Guarda las materias, horarios y 
 # maestros en un archivo seguro de forma automática y ordenada.
-SQLAlchemy
+SQLAlchemy==2.0.30
 
 # 4. sounddevice
 # Es la grabadora del programa. Enciende el micrófono del equipo 
 # para escuchar la voz cuando quieres hablar con el asistente.
-sounddevice
+sounddevice==0.4.6
 
 # 5. numpy
 # Calculadora potente. El sonido de la voz se traduce 
 # en miles de números, esta herramienta los procesa casi al instante para 
 # que la aplicación no se trabe.
-numpy
+numpy==1.26.4
 
 # 6. scipy
 # Es el creador de archivos. Toma los números del audio que capturó el 
 # micrófono y los convierte en un archivo de voz normal (.wav) que la 
 # IA sí puede entender.
-scipy
+scipy==1.13.0
 
 # 7. gTTS
 # Son las cuerdas vocales del asistente. Toma las respuestas escritas 
 # de la inteligencia artificial y las lee en voz alta.
-gTTS
+gTTS==2.5.1
 
 # 8. pygame
 # Es el reproductor multimedia. Hace que se escuche la voz del asistente 
 # por las bocinas mientras se continua usando la ventana sin interrupciones.
-pygame
+pygame==2.5.2
 
 
 # ==============================================================================
-# PARTE 2: HERRAMIENTAS QUE YA SON NATIVAS DE PYTHON
+# PARTE 2: HERRAMIENTAS QUE YA VIENEN DE FÁBRICA EN TU COMPU
 # ==============================================================================
 # (Estas líneas tienen un "#" al inicio para que el instalador las ignore 
 # y no marque error, ya que no hace falta descargarlas de internet).
