@@ -1,55 +1,26 @@
-# app/models/event.py
+# backend/app/database/event.py
 """
-Modelo de Evento del Calendario
-Define cómo se ven los eventos (clases, tareas, exámenes)
+Modelo de CalendarEvent (Evento del Calendario) - ACTUALIZADO
+Tabla: calendar_events
+Agregado: location
 """
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, ForeignKey, DateTime
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
 from app.database.postgres import Base
-import uuid
 
 class CalendarEvent(Base):
-    """
-    Tabla: calendar_events
-    
-    Campos:
-    - id: Identificador único del evento
-    - user_id: A quién pertenece el evento
-    - title: Nombre del evento (ej: "Cálculo Diferencial")
-    - description: Detalles adicionales
-    - start_time: Cuándo empieza
-    - end_time: Cuándo termina
-    - event_type: Tipo (clase, examen, tarea, etc)
-    - classroom: Salón (ej: "Aula 301")
-    - professor: Nombre del profesor
-    - recurrence: Si se repite (ej: "weekly")
-    """
     __tablename__ = "calendar_events"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    # Información del evento
+    id = Column(String(36), primary_key=True, default=lambda: str(__import__('uuid').uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     title = Column(String(500), nullable=False)
-    description = Column(Text)
-    
-    # Fechas y horarios
-    start_time = Column(DateTime(timezone=True), nullable=False, index=True)
+    description = Column(String)
+    start_time = Column(DateTime(timezone=True), nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=False)
-    
-    # Metadata
-    event_type = Column(String(50))  # clase, examen, tarea, estudio
+    event_type = Column(String(50))
     classroom = Column(String(100))
     professor = Column(String(255))
-    recurrence = Column(String(50))  # daily, weekly, monthly
-    
+    location = Column(String(255))      # NUEVO: Ubicación
+    recurrence = Column(String(50))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    # Relación con User
-    user = relationship("User", back_populates="events")
-    
-    def __repr__(self):
-        return f"<Event {self.title} at {self.start_time}>"
