@@ -1,0 +1,15 @@
+# Base de datos (TU MÓDULO)
+sqlalchemy==2.0.25
+asyncpg==0.30.0
+alembic==1.13.1
+redis==5.0.1
+python-dotenv==1.0.0
+pydantic==2.5.3
+
+# Backend FastAPI (PARA EL MVP)
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Gemini (PARA EL CHAT)
+google-generativeai==0.3.2
