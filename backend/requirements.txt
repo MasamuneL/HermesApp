@@ -11,5 +11,20 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 
-# Gemini (PARA EL CHAT)
-google-generativeai==0.3.2
+# Google APIs — Calendar + Auth
+google-api-python-client>=2.100.0
+google-auth>=2.20.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.2.0
+
+# Gemini + LangChain/LangGraph (PARA EL CHAT Y AGENTE)
+google-generativeai>=0.7.0
+langchain-google-genai>=1.0.0
+langchain-core>=0.2.0
+langgraph>=0.2.0
+
+# HTTP async (verificación de tokens OAuth)
+httpx>=0.25.0
+
+# Firebase Admin (otros routers: users, ranking)
+firebase-admin>=6.2.0
