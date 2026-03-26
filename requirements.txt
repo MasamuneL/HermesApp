@@ -14,44 +14,49 @@
 # ------------------------------------------------------------------------------
 # Framework web y servidor ASGI
 # ------------------------------------------------------------------------------
-fastapi>=0.135.1
-uvicorn[standard]>=0.42.0
+fastapi
+uvicorn[standard
+python-multipart
+
 
 
 # ------------------------------------------------------------------------------
 # Validación de datos — Pydantic v2
 # Usado directamente en todos los schemas (schemas/users.py, chat.py, etc.)
 # ------------------------------------------------------------------------------
-pydantic>=2.12.5
+pydantic
 
 
 # ------------------------------------------------------------------------------
 # Base de datos — PostgreSQL async
 # SQLAlchemy 2.0 con soporte async + driver asyncpg para PostgreSQL
 # ------------------------------------------------------------------------------
-sqlalchemy[asyncio]>=2.0.48
-asyncpg>=0.31.0
+sqlalchemy
+asyncpg
+alembic
 
 
 # ------------------------------------------------------------------------------
 # Cache y ranking en tiempo real — Redis async
 # Usado en redis_operations.py para cache de chat, ranking (Sorted Sets) y sesiones
 # ------------------------------------------------------------------------------
-redis[hiredis]>=7.3.0
+redis
 
 
 # ------------------------------------------------------------------------------
-# Autenticación — Firebase Admin SDK
+# Autenticación — OAuth
 # Verifica tokens de Firebase Auth (Google OAuth + email/password)
 # ------------------------------------------------------------------------------
-firebase-admin>=7.3.0
-
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+httpx
 
 # ------------------------------------------------------------------------------
 # Variables de entorno
 # Lee el archivo .env para DATABASE_URL, REDIS_URL, GEMINI_API_KEY, etc.
 # ------------------------------------------------------------------------------
-python-dotenv>=1.2.2
+python-dotenv
 
 
 # ------------------------------------------------------------------------------
@@ -59,34 +64,16 @@ python-dotenv>=1.2.2
 # OAuth2 + cliente de la API para leer y crear eventos del calendario del usuario
 # Usado en quickstart.py (Alan + Ángel)
 # ------------------------------------------------------------------------------
-google-auth>=2.49.1
-google-auth-oauthlib>=1.3.0
-google-api-python-client>=2.193.0
+google-api-python-client
 
 
 # ------------------------------------------------------------------------------
-# Google Gemini (IA)
+# Gemini + LangChain/LangGraph (PARA EL CHAT Y AGENTE)
 # SDK oficial para conectar con Gemini 2.0 Flash (chatbot + function calling)
 # Usado en services/llm_orchestrator.py y services/gemini_agent.py (Víctor)
 # También usado en HermesAgent/hermes_app.py (prototipo)
 # ------------------------------------------------------------------------------
-google-genai>=1.68.0
-
-
-# ==============================================================================
-# PROTOTIPO DE ESCRITORIO — HermesAgent (backend/app/HermesAgent/hermes_app.py)
-# Solo necesario si quieres correr el prototipo local de Víctor.
-# El servidor FastAPI NO requiere estas librerías.
-# ==============================================================================
-
-# Síntesis de voz (texto → audio .mp3)
-gTTS>=2.5.4
-
-# Reproducción de audio en segundo plano
-pygame>=2.6.1
-
-# Captura de micrófono
-sounddevice>=0.5.5
-
-# Procesamiento matemático de audio (requerido por sounddevice)
-scipy>=1.17.1
+google-generativeai
+langchain-google-genai
+langchain-core
+langgraph
