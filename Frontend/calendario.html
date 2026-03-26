@@ -313,19 +313,26 @@
       initCalendar();
       initVoice();
       // Obtener saludo inicial desde el backend (onboarding o bienvenida de vuelta)
+      const FALLBACK_GREETING = "¡Hola! Puedo agendar eventos por ti. Dime algo como:\n\"Agenda que tengo que recoger mi pasaporte el 20 de marzo a las 10am\"";
+      const setGreeting = (text) => {
+        const greetEl = document.getElementById("greetingMsg");
+        if (greetEl) {
+          greetEl.innerHTML = text.replace(/\n/g, "<br>") +
+            `<div class="msg-time">${new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}</div>`;
+        }
+        chatHistory.push({ role: "assistant", content: text });
+      };
       try {
         const res = await fetch(`${API_BASE}/api/chat/greeting`, { headers: currentHeaders });
         if (res.ok) {
           const data = await res.json();
-          const greetEl = document.getElementById("greetingMsg");
-          if (greetEl) {
-            greetEl.innerHTML = data.message.replace(/\n/g, "<br>") +
-              `<div class="msg-time">${new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}</div>`;
-          }
-          // Agregar al historial para que Gemini tenga contexto
-          chatHistory.push({ role: "assistant", content: data.message });
+          setGreeting(data.message);
+        } else {
+          setGreeting(FALLBACK_GREETING);
         }
-      } catch (_) { /* silencioso si no hay backend */ }
+      } catch (_) {
+        setGreeting(FALLBACK_GREETING);
+      }
     });
 
     function initCalendar() {
