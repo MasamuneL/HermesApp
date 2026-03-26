@@ -257,20 +257,17 @@
   </div>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, auth, signOut } from "./firebase.js";
+    import { requireAuth, authHeaders, API_BASE, signOut } from "./auth.js";
 
     const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     let calendar;
     let pendingEvento = null;
     let chatOpen      = false;
-    let googleToken   = null; // se asigna tras login con Google
     let currentHeaders = {};
 
     requireAuth(async user => {
-      currentHeaders = await authHeaders(
-        googleToken ? { "X-Google-Token": googleToken } : {}
-      );
+      currentHeaders = await authHeaders();
       initCalendar();
     });
 
@@ -477,7 +474,7 @@
     function getTime()  { return new Date().toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" }); }
     function formatFecha(f) { const [y,m,d] = f.split("-").map(Number); return `${d} de ${MONTHS_ES[m-1]} ${y}`; }
 
-    window.handleLogout = async () => { await signOut(auth); window.location.href = "login.html"; };
+    window.handleLogout = async () => { signOut(); window.location.href = "login.html"; };
     window.toggleMenu   = () => document.getElementById("mainMenu").classList.toggle("open");
     document.addEventListener("click", e => {
       if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown"))

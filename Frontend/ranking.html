@@ -128,7 +128,7 @@
   </main>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, auth, signOut } from "./firebase.js";
+    import { requireAuth, authHeaders, API_BASE, signOut } from "./auth.js";
 
     requireAuth(async () => {
       await Promise.all([loadMyRank(), loadTopRanking()]);
@@ -207,7 +207,7 @@
       `).join("");
     }
 
-    window.handleLogout = async () => { await signOut(auth); window.location.href = "login.html"; };
+    window.handleLogout = async () => { signOut(); window.location.href = "login.html"; };
     window.toggleMenu   = () => document.getElementById("mainMenu").classList.toggle("open");
     document.addEventListener("click", e => {
       if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown"))

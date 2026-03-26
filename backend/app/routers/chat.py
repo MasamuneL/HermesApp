@@ -9,74 +9,24 @@ Endpoints:
   POST /api/chat/image    — Imagen de horario para OCR + registro en Calendar
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-import httpx
 
 from app.database.postgres import get_db
 from app.database.crud_users import get_user_by_email
 from app.database.redis_operations import get_cached_chat_response, cache_chat_response
+from app.dependencies.auth import get_current_user
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.llm_orchestrator import process_message
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
 
-# ─────────────────────────────────────────────
-# Auth dependency — Google OAuth
-# ─────────────────────────────────────────────
-
-
-async def get_current_user(authorization: str = Header()) -> dict:
-    """
-    Verifica el Google OAuth access token llamando al tokeninfo de Google.
-    Retorna {"email": str, "google_token": str}.
-
-    El frontend obtiene este token así:
-        const result = await signInWithPopup(auth, googleProvider);
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const googleToken = credential.accessToken;
-        // Luego: Authorization: Bearer <googleToken>
-    """
-    token = authorization.removeprefix("Bearer ").strip()
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                "https://oauth2.googleapis.com/tokeninfo",
-                params={"access_token": token},
-                timeout=5.0,
-            )
-        if resp.status_code != 200:
-            raise HTTPException(status_code=401, detail="Token de Google inválido o expirado")
-
-        info = resp.json()
-        email = info.get("email")
-        if not email:
-            raise HTTPException(status_code=401, detail="El token no contiene email")
-
-        return {"email": email, "google_token": token}
-
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(status_code=401, detail="Error al verificar el token de Google")
-
-
-# ─────────────────────────────────────────────
-# Schema adicional para el endpoint de imagen
-# ─────────────────────────────────────────────
-
-
 class ImageChatRequest(BaseModel):
     image_base64: str
     mime_type: str = "image/png"
     message: str = "Analiza este horario y registra las clases en mi calendario."
-
-
-# ─────────────────────────────────────────────
-# Endpoints
-# ─────────────────────────────────────────────
 
 
 @router.post("/", response_model=ChatResponse)
@@ -97,9 +47,6 @@ async def send_message_endpoint(
 
     Headers requeridos:
     - Authorization: Bearer <google_oauth_access_token>
-
-    Body:
-    - message: texto del usuario
     """
     user = await get_user_by_email(db, current_user["email"])
     if not user:
@@ -108,12 +55,10 @@ async def send_message_endpoint(
     user_id = str(user.id)
     google_token = current_user["google_token"]
 
-    # Revisar cache antes de llamar al agente
     cached = await get_cached_chat_response(body.message, user_id)
     if cached:
         return ChatResponse(response=cached, intent=None, cached=True)
 
-    # Procesar con el orquestador LangGraph
     result = await process_message(
         message=body.message,
         user_id=user_id,
@@ -142,11 +87,6 @@ async def process_image_endpoint(
 
     Headers requeridos:
     - Authorization: Bearer <google_oauth_access_token>
-
-    Body:
-    - image_base64: imagen en base64
-    - mime_type: "image/png" o "image/jpeg" (default: "image/png")
-    - message: mensaje opcional (default: "Analiza este horario...")
     """
     user = await get_user_by_email(db, current_user["email"])
     if not user:

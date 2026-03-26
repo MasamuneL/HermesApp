@@ -141,7 +141,7 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, auth, signOut } from "./firebase.js";
+    import { requireAuth, authHeaders, API_BASE, signOut } from "./auth.js";
 
     // Mapeo de ach_rank del schema AchievementsResponse a dificultad visual
     // ach_rank: 1=fácil, 2=medio, 3=difícil, 4=experto
@@ -302,7 +302,7 @@
     }
 
     window.toggleLogro  = toggleLogro;
-    window.handleLogout = async () => { await signOut(auth); window.location.href = "login.html"; };
+    window.handleLogout = async () => { signOut(); window.location.href = "login.html"; };
     window.toggleMenu   = () => document.getElementById("mainMenu").classList.toggle("open");
     document.addEventListener("click", e => {
       if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown"))

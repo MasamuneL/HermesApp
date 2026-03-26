@@ -26,5 +26,3 @@ langgraph>=0.2.0
 # HTTP async (verificación de tokens OAuth)
 httpx>=0.25.0
 
-# Firebase Admin (otros routers: users, ranking)
-firebase-admin>=6.2.0
