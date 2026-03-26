@@ -181,6 +181,29 @@
     .send-btn:disabled { opacity:0.4; cursor:not-allowed; }
     .send-btn svg { width:15px; height:15px; fill:var(--gold); }
     @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    /* TTS toggle */
+    .tts-btn { background:none; border:none; cursor:pointer; font-size:15px; opacity:0.45; transition:opacity 0.2s; padding:4px; }
+    .tts-btn.active { opacity:1; color:var(--gold); }
+    /* Mic button */
+    .mic-btn { background:none; border:none; cursor:pointer; font-size:18px; padding:0 4px; opacity:0.45; transition:all 0.2s; flex-shrink:0; }
+    .mic-btn.listening { opacity:1; color:#e74c3c; animation:pulse 1s infinite; }
+    .mic-btn:disabled { opacity:0.2; cursor:not-allowed; }
+    /* Schedule FAB */
+    .schedule-fab { position:fixed; bottom:100px; right:32px; width:48px; height:48px; border-radius:50%; background:#fff; border:1px solid var(--gold-dim); box-shadow:0 4px 16px rgba(201,168,76,0.15); font-size:20px; cursor:pointer; z-index:300; transition:transform 0.2s, box-shadow 0.2s; }
+    .schedule-fab:hover { transform:scale(1.08); box-shadow:0 6px 24px rgba(201,168,76,0.3); }
+    /* Schedule Panel */
+    #schedulePanel { position:fixed; left:-320px; top:0; width:300px; height:100vh; background:#fff; border-right:1px solid var(--border); z-index:250; transition:left 0.3s ease; overflow-y:auto; padding:20px 16px; box-shadow:4px 0 24px rgba(0,0,0,0.06); }
+    #schedulePanel.open { left:0; }
+    .sp-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .sp-header span { font-size:12px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--text); }
+    .sp-close { background:none; border:none; font-size:18px; cursor:pointer; color:var(--muted); }
+    .sp-day-label { font-size:10px; text-transform:uppercase; letter-spacing:0.2em; color:var(--gold); margin:14px 0 6px; }
+    .sp-event { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+    .sp-event-title { flex:1; color:var(--text); }
+    .sp-event-time { color:var(--muted); font-size:11px; white-space:nowrap; }
+    .sp-edit-btn { font-size:10px; padding:3px 8px; border:1px solid var(--gold-dim); background:none; color:var(--gold); cursor:pointer; border-radius:2px; white-space:nowrap; transition:all 0.15s; }
+    .sp-edit-btn:hover { background:var(--gold-dim); }
+    .sp-empty { color:var(--muted); font-size:13px; text-align:center; margin-top:40px; }
   </style>
 </head>
 <body>
@@ -227,6 +250,16 @@
     </div>
   </div>
 
+  <button class="schedule-fab" onclick="toggleSchedulePanel()" title="Mi semana">📋</button>
+
+  <div id="schedulePanel">
+    <div class="sp-header">
+      <span>Mi Semana</span>
+      <button class="sp-close" onclick="toggleSchedulePanel()">×</button>
+    </div>
+    <div id="scheduleList"><p class="sp-empty">Cargando...</p></div>
+  </div>
+
   <button class="chat-fab" onclick="toggleChat()" title="Agendar con asistente">
     <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
   </button>
@@ -237,7 +270,10 @@
         <div class="bot-dot-live"></div>
         <span class="chat-win-name">Asistente HERMES</span>
       </div>
-      <button class="chat-win-close" onclick="toggleChat()">×</button>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button class="tts-btn" id="ttsToggle" onclick="toggleTTS()" title="Activar voz">🔇</button>
+        <button class="chat-win-close" onclick="toggleChat()">×</button>
+      </div>
     </div>
     <div class="chat-messages" id="chatMessages">
       <div class="msg bot">
@@ -247,6 +283,7 @@
       </div>
     </div>
     <div class="chat-input-area">
+      <button class="mic-btn" id="micBtn" onclick="toggleVoice()" title="Hablar">🎤</button>
       <textarea class="chat-input" id="chatInput" rows="1"
         placeholder="Dile al asistente qué agendar..."
         onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
@@ -265,11 +302,17 @@
     let pendingEvento = null;
     let chatOpen      = false;
     let currentHeaders = {};
-    let chatHistory   = []; // historial de la sesión: [{role, content}]
+    let chatHistory       = []; // historial de la sesión: [{role, content}]
+    let ttsEnabled        = false;
+    let isListening       = false;
+    let schedulePanelOpen = false;
+    let recognition       = null;
+    const SpeechRec       = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     requireAuth(async user => {
       currentHeaders = await authHeaders();
       initCalendar();
+      initVoice();
     });
 
     function initCalendar() {
@@ -330,6 +373,7 @@
       document.getElementById("chatWindow").classList.toggle("open", chatOpen);
       document.getElementById("calMain").classList.toggle("chat-open", chatOpen);
       if (chatOpen) document.getElementById("chatInput").focus();
+      else speechSynthesis.cancel();
     };
 
     window.sendMessage = async function() {
@@ -371,6 +415,7 @@
           }
         } else {
           appendMsg(data.response, "bot");
+          speak(data.response);
         }
 
       } catch {
@@ -471,6 +516,114 @@
     window.autoResize  = el => { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 90) + "px"; };
     function getTime()  { return new Date().toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" }); }
     function formatFecha(f) { const [y,m,d] = f.split("-").map(Number); return `${d} de ${MONTHS_ES[m-1]} ${y}`; }
+
+    // ── TTS ──────────────────────────────────────────────────────────────────
+    function speak(text) {
+      if (!ttsEnabled) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text.replace(/<[^>]*>/g, ''));
+      u.lang = 'es-MX'; u.rate = 1.05;
+      speechSynthesis.speak(u);
+    }
+    window.toggleTTS = function() {
+      ttsEnabled = !ttsEnabled;
+      const btn = document.getElementById("ttsToggle");
+      btn.textContent = ttsEnabled ? "🔊" : "🔇";
+      btn.classList.toggle("active", ttsEnabled);
+      if (!ttsEnabled) speechSynthesis.cancel();
+    };
+
+    // ── VOICE INPUT ──────────────────────────────────────────────────────────
+    function initVoice() {
+      const micBtn = document.getElementById("micBtn");
+      if (!SpeechRec) {
+        if (micBtn) { micBtn.disabled = true; micBtn.title = "Solo disponible en Chrome/Edge"; }
+        return;
+      }
+      recognition = new SpeechRec();
+      recognition.lang = 'es-MX';
+      recognition.interimResults = false;
+      recognition.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        const input = document.getElementById("chatInput");
+        input.value = text;
+        window.autoResize(input);
+        window.sendMessage();
+      };
+      recognition.onend = () => stopListening();
+      recognition.onerror = () => stopListening();
+    }
+    window.toggleVoice = function() {
+      if (!recognition) return;
+      isListening ? stopListening() : startListening();
+    };
+    function startListening() {
+      isListening = true;
+      recognition.start();
+      document.getElementById("micBtn").classList.add("listening");
+      speechSynthesis.cancel();
+    }
+    function stopListening() {
+      isListening = false;
+      recognition?.stop();
+      const micBtn = document.getElementById("micBtn");
+      if (micBtn) micBtn.classList.remove("listening");
+    }
+
+    // ── SCHEDULE PANEL ───────────────────────────────────────────────────────
+    window.toggleSchedulePanel = async function() {
+      schedulePanelOpen = !schedulePanelOpen;
+      document.getElementById("schedulePanel").classList.toggle("open", schedulePanelOpen);
+      if (schedulePanelOpen) await loadSchedulePanel();
+    };
+    async function loadSchedulePanel() {
+      const list = document.getElementById("scheduleList");
+      list.innerHTML = '<p class="sp-empty">Cargando…</p>';
+      try {
+        const res = await fetch(`${API_BASE}/api/calendar/events?max_results=50`, { headers: currentHeaders });
+        if (!res.ok) throw new Error("Error al obtener eventos");
+        const events = await res.json();
+
+        const now = new Date();
+        const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + 7);
+
+        const grouped = {};
+        for (const e of events) {
+          const d = new Date(e.start);
+          if (d < now || d > weekEnd) continue;
+          const key = d.toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'short' });
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(e);
+        }
+
+        if (!Object.keys(grouped).length) {
+          list.innerHTML = '<p class="sp-empty">Sin eventos esta semana</p>';
+          return;
+        }
+        list.innerHTML = Object.entries(grouped).map(([day, evs]) => `
+          <div class="sp-day">
+            <div class="sp-day-label">${day}</div>
+            ${evs.map(e => `
+              <div class="sp-event">
+                <span class="sp-event-title">${e.title}</span>
+                <span class="sp-event-time">${new Date(e.start).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</span>
+                <button class="sp-edit-btn" onclick="editWithGemini('${e.title.replace(/'/g,"\\'")}','${e.start}')">Editar</button>
+              </div>
+            `).join('')}
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<p class="sp-empty">No se pudieron cargar los eventos</p>`;
+      }
+    }
+    window.editWithGemini = function(title, start) {
+      const fecha = new Date(start).toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' });
+      const input = document.getElementById("chatInput");
+      input.value = `Quiero editar el evento "${title}" del ${fecha}`;
+      window.autoResize(input);
+      if (!chatOpen) window.toggleChat();
+      input.focus();
+    };
 
     window.handleLogout = async () => { signOut(); window.location.href = "login.html"; };
     window.toggleMenu   = () => document.getElementById("mainMenu").classList.toggle("open");
