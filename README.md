@@ -1,14 +1,13 @@
 # Hermes App — Organizador Académico con IA
 
-Hermes es una aplicación web para estudiantes universitarios. Transforma horarios físicos en calendarios digitales inteligentes y motiva el estudio mediante gamificación y un ranking en tiempo real.
+Hermes es una aplicación web para estudiantes universitarios. Combina un calendario inteligente con Google Calendar, un chatbot con Gemini Flash y gamificación con ranking en tiempo real.
 
 ## Flujo principal
 
-1. **Login** — El usuario entra con Google o email/password a través de Firebase Auth.
-2. **Captura** — Sube una foto de su horario en papel.
-3. **Procesamiento** — Gemini 2.5 Flash lee la imagen y extrae materias, horarios y salones.
-4. **Calendario** — La información se sincroniza en Google Calendar automáticamente.
-5. **Motivación** — El sistema asigna puntos por actividad y muestra un ranking en tiempo real.
+1. **Login** — El usuario entra con su cuenta Google (Google Identity Services).
+2. **Calendario** — Sus eventos de Google Calendar se sincronizan automáticamente.
+3. **Chat con Gemini** — Le habla a Hermes en lenguaje natural: "¿qué tengo mañana?", "crea una clase de Cálculo el lunes a las 9".
+4. **Motivación** — El sistema asigna puntos por actividad y muestra un ranking en tiempo real.
 
 ---
 
@@ -16,14 +15,14 @@ Hermes es una aplicación web para estudiantes universitarios. Transforma horari
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | HTML5 + Tailwind CSS + TypeScript (sin framework) |
-| Backend | Python 3.11+ + FastAPI (async) |
-| Auth | Firebase Auth (Google OAuth + email/password) |
-| IA | Google Gemini 2.5 Flash (chat + OCR de horarios) |
+| Frontend | HTML5 + CSS + JavaScript (sin framework) |
+| Backend | Python 3.12 + FastAPI (async) |
+| Auth | Google OAuth 2.0 via Google Identity Services (GIS) |
+| IA | Google Gemini Flash + LangGraph (chat + function calling) |
 | Calendario | Google Calendar API |
-| Base de datos principal | PostgreSQL 16 (SQLAlchemy 2.0 async) |
-| Cache y ranking | Redis 7 (sorted sets para leaderboard) |
-| Deployment | Docker + CI/CD (Dennis y Oscar) |
+| Base de datos | PostgreSQL 15 (SQLAlchemy 2.0 async + asyncpg) |
+| Cache / Ranking | Redis 7 (sorted sets para leaderboard) |
+| Deployment | Docker Compose (Dennis / Oscar) |
 
 ---
 
@@ -33,77 +32,112 @@ Hermes es una aplicación web para estudiantes universitarios. Transforma horari
 HermesApp/
 ├── backend/
 │   └── app/
-│       ├── main.py              # Entry point FastAPI + init Firebase
-│       ├── database/            # Modelos SQLAlchemy y CRUDs
-│       │   ├── postgres.py      # Conexión async a PostgreSQL
-│       │   ├── user.py          # Modelo User
-│       │   ├── ranking.py       # Modelo Ranking
-│       │   ├── crud_users.py    # CRUD de usuarios
+│       ├── main.py                  # Entry point FastAPI
+│       ├── dependencies/
+│       │   └── auth.py              # Verificación de token Google OAuth
+│       ├── database/                # Modelos SQLAlchemy + CRUDs
+│       │   ├── postgres.py          # Conexión async a PostgreSQL
+│       │   ├── user.py              # Modelo User
+│       │   ├── ranking.py           # Modelo Ranking
+│       │   ├── crud_users.py        # CRUD de usuarios
 │       │   └── redis_operations.py  # Cache, sesiones y ranking en Redis
-│       ├── schemas/             # Modelos Pydantic (contrato frontend ↔ backend)
+│       ├── schemas/                 # Modelos Pydantic (contrato frontend ↔ backend)
 │       │   ├── users.py
 │       │   ├── ranking.py
 │       │   ├── chat.py
 │       │   └── achievements.py
-│       ├── routers/             # Endpoints de la API
-│       │   ├── users.py         # /api/users
-│       │   ├── ranking.py       # /api/ranking
-│       │   ├── chat.py          # /api/chat
-│       │   └── logros.py        # /api/logros
-│       └── services/            # Lógica de IA (Gemini)
-│           ├── gemini_agent.py
-│           ├── llm_orchestrator.py
-│           └── action_tools.py
-├── Frontend/                    # Código del frontend (Oswaldo)
-├── .env.example                 # Plantilla de variables de entorno
+│       ├── routers/                 # Endpoints de la API
+│       │   ├── users.py             # /api/users
+│       │   ├── calendar.py          # /api/calendar
+│       │   ├── chat.py              # /api/chat
+│       │   ├── ranking.py           # /api/ranking
+│       │   └── logros.py            # /api/logros
+│       ├── services/                # Lógica de IA
+│       │   ├── gemini_agent.py      # Conexión con Gemini API
+│       │   ├── llm_orchestrator.py  # LangGraph: clasifica intención y ejecuta acción
+│       │   └── action_tools.py      # Funciones que Gemini puede invocar
+│       └── HermesAgent/
+│           └── hermes_app.py        # Prototipo de escritorio de Víctor (referencia)
+├── Frontend/
+│   ├── login.html                   # Login con Google
+│   ├── main.html                    # Dashboard principal
+│   ├── calendario.html              # Calendario + chat con Gemini
+│   ├── perfil.html
+│   ├── ranking.html
+│   ├── logros.html
+│   └── auth.js                      # Módulo de autenticación (GIS)
+├── docker-compose.yml               # PostgreSQL + Redis + backend
+├── backend/Dockerfile
+├── .env.example                     # Plantilla de variables de entorno
 ├── .gitignore
-├── CLAUDE.md                    # Contexto y decisiones de arquitectura
-└── PLAN.txt                     # Plan de entrega al 23 de marzo
+├── CLAUDE.md                        # Decisiones de arquitectura (para Claude Code)
+└── AVANCES.md                       # Estado del proyecto y pendientes
 ```
 
 ---
 
-## Configuración local (para desarrolladores)
+## Configuración local
 
-### Requisitos previos
-- Python 3.11+
+### Requisitos
 - Docker Desktop
-- Git
+- Python 3.12+ (solo si corres el backend fuera de Docker)
+- Chrome o Edge (para voice input con SpeechRecognition API)
 
 ### Pasos
 
-**1. Clonar el repo**
+**1. Clonar y pararse en la rama de desarrollo**
 ```bash
 git clone https://github.com/MasamuneL/HermesApp.git
 cd HermesApp
+git checkout feature/google-oauth
 ```
 
 **2. Configurar variables de entorno**
 ```bash
 cp .env.example .env
-# Edita .env con tus credenciales reales
 ```
+Edita `.env` y llena:
+- `GEMINI_API_KEY` — obtenla en [Google AI Studio](https://aistudio.google.com/app/apikey)
+- `GOOGLE_CLIENT_ID` — ya está en el `.env.example` (el del proyecto)
 
-**3. Agregar credenciales de Firebase**
-
-Descarga `firebase-credentials.json` desde Firebase Console y colócalo en la raíz del proyecto. **Nunca lo subas al repo.**
-
-**4. Levantar PostgreSQL y Redis con Docker**
+**3. Levantar servicios con Docker**
 ```bash
-docker-compose up -d
+docker-compose up --build
+```
+Esto levanta PostgreSQL, Redis y el backend FastAPI en `http://localhost:8000`.
+
+**4. Aplicar el schema de base de datos (primera vez)**
+```bash
+docker exec -i hermes_postgres psql -U hermes_user -d hermes < backend/database/schema.sql
 ```
 
-**5. Instalar dependencias de Python**
-```bash
-pip install -r requirements.txt
-```
+**5. Abrir el frontend**
 
-**6. Correr el servidor**
-```bash
-uvicorn app.main:app --reload
-```
+Abre `Frontend/login.html` directamente en Chrome o sirve la carpeta con Live Server (VS Code).
 
 La documentación interactiva de la API estará en: `http://localhost:8000/docs`
+
+### Requisito de Google Cloud Console
+
+El OAuth Client ID necesita `http://localhost` en **Authorized JavaScript origins**. Si ves error de origen no autorizado, agrégalo en:
+> Google Cloud Console → APIs & Services → Credentials → tu OAuth 2.0 Client ID → Authorized JavaScript origins
+
+---
+
+## Endpoints principales
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/api/users/register` | Registra o devuelve el usuario autenticado |
+| `GET`  | `/api/users/me` | Perfil del usuario |
+| `GET`  | `/api/calendar/events` | Lista eventos de Google Calendar |
+| `POST` | `/api/calendar/events` | Crea un evento en Google Calendar |
+| `POST` | `/api/chat/` | Envía mensaje a Gemini (con historial) |
+| `GET`  | `/api/ranking/top` | Top N del leaderboard (público) |
+| `GET`  | `/api/ranking/me` | Posición y puntos del usuario |
+| `GET`  | `/api/logros/me` | Logros del usuario |
+
+Todos los endpoints protegidos requieren `Authorization: Bearer <google_access_token>`.
 
 ---
 
@@ -111,11 +145,11 @@ La documentación interactiva de la API estará en: `http://localhost:8000/docs`
 
 | Integrante | Rol |
 |-----------|-----|
-| Víctor (Ferrokanon) | Backend + Gemini AI |
-| Oswaldo | Frontend (HTML, Tailwind, TypeScript) |
-| Alan (MasamuneL) | APIs, schemas Pydantic, project management |
-| Ángel | Bases de datos |
-| Dennis | Deployment |
+| Víctor (Ferrokanon) | Backend + prototipo Gemini |
+| Oswaldo | Frontend (HTML, CSS, JS) |
+| Alan (MasamuneL) | APIs, schemas, auth, project management |
+| Ángel | Bases de datos (schema SQL) |
+| Dennis | Deployment (Docker) |
 | Oscar | CI/CD |
 | Álvaro | Comodín |
 | Martin | DB: tabla achievements + campos User |
@@ -124,6 +158,6 @@ La documentación interactiva de la API estará en: `http://localhost:8000/docs`
 
 ## Reglas del equipo
 
-1. **Nunca trabajar directamente en `main`** — siempre crear una rama descriptiva (ej. `feature/google-calendar` o `fix/login-error`).
-2. **Pull Request antes de mergear** — un compañero debe revisar el código.
-3. **No subir `.env` ni `firebase-credentials.json`** al repo bajo ninguna circunstancia.
+1. **Nunca trabajar directamente en `main`** — siempre crear una rama descriptiva.
+2. **Pull Request antes de mergear** — un compañero debe revisar.
+3. **No subir `.env`** al repo bajo ninguna circunstancia.

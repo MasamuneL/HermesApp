@@ -1,88 +1,106 @@
 # Avances — Hermes App
 
-Última actualización: 19 de marzo de 2026
+Última actualización: 25 de marzo de 2026
 
 ---
 
-## ¿Qué funciona hoy?
+## ¿Qué funciona hoy? (rama `feature/google-oauth`)
 
-### Backend — Estructura base completa
-- `main.py` configurado con FastAPI, CORS y Firebase Admin SDK inicializado al arrancar.
-- 4 routers registrados y documentados en `/docs`:
-  - `POST /api/users/register` — registra al usuario en PostgreSQL tras el primer login con Firebase
-  - `GET  /api/users/me` — retorna el perfil del usuario autenticado
-  - `PUT  /api/users/me` — actualiza el nombre del usuario
-  - `DELETE /api/users/me` — desactiva la cuenta (soft delete)
-  - `GET  /api/ranking/top` — top N del leaderboard desde Redis (público)
-  - `GET  /api/ranking/me` — posición y puntos del usuario en el ranking global
-  - `POST /api/chat/` — estructura lista, pendiente conectar Gemini
-  - `GET  /api/logros/me` — estructura lista, pendiente tabla de Martin
+### Auth — Migrado de Firebase a Google OAuth directo
+- Eliminado Firebase Admin SDK del backend y Firebase JS SDK del frontend.
+- Login con Google a través de **Google Identity Services (GIS)** — un solo token de acceso con scopes `openid email profile calendar`.
+- El token se verifica en el backend via `https://oauth2.googleapis.com/tokeninfo`.
+- El mismo token sirve para autenticación **y** para llamar a la Google Calendar API (sin header separado).
+- Nuevos archivos: `Frontend/auth.js` (reemplaza `firebase.js`), `backend/app/dependencies/auth.py` (dependency compartida).
 
-### Base de datos — Modelos y CRUDs listos
-- Modelos SQLAlchemy: `User`, `CalendarEvent`, `Ranking`
-- CRUDs completos: `crud_users.py`, `crud_events.py`
-- Operaciones Redis: cache de chat, ranking con sorted sets, sesiones con TTL
+### Backend — Todos los routers funcionales
+- `main.py` con FastAPI, CORS, sin Firebase.
+- **Usuarios** (`/api/users`):
+  - `POST /api/users/register` — upsert: registra o devuelve usuario existente
+  - `GET  /api/users/me` — perfil del usuario autenticado
+  - `PUT  /api/users/me` — actualiza nombre
+  - `DELETE /api/users/me` — soft delete
+- **Calendario** (`/api/calendar`):
+  - `GET    /api/calendar/events` — lista eventos de Google Calendar del usuario
+  - `POST   /api/calendar/events` — crea evento en Google Calendar
+  - `DELETE /api/calendar/events/{event_id}` — elimina evento
+  - El access token del usuario se obtiene directamente desde `current_user["google_token"]`
+- **Chat** (`/api/chat`):
+  - `POST /api/chat/` — recibe mensaje e historial, pasa por LangGraph orchestrator, devuelve respuesta de Gemini
+  - Historial de conversación soportado (`history: list[dict]` en el request)
+- **Ranking** (`/api/ranking`):
+  - `GET /api/ranking/top` — top N desde Redis (público)
+  - `GET /api/ranking/me` — posición y puntos del usuario
+- **Logros** (`/api/logros`):
+  - `GET /api/logros/me` — estructura lista, pendiente tabla de Martin
 
-### Schemas Pydantic — Contrato frontend ↔ backend
-- `UserResponse`, `RankingResponse`, `ChatRequest`, `ChatResponse`, `AchievementsResponse`
+### Servicios de IA — Conectados
+- `gemini_agent.py` — corregida variable de entorno (`GEMINI_API_KEY`, no `GOOGLE_API_KEY`)
+- `llm_orchestrator.py` — LangGraph clasificando intención y ejecutando acciones
+- `action_tools.py` — herramientas que Gemini puede invocar (Google Calendar)
 
-### Configuración y documentación
-- `.env.example` con todas las variables necesarias
-- `.gitignore` protegiendo `.env` y `firebase-credentials.json`
-- `CLAUDE.md` con decisiones de arquitectura del proyecto
-- `README.md` actualizado con stack real, estructura real y pasos de instalación
-- `PLAN.txt` con plan de entrega al 23 de marzo
+### Frontend — Conectado al backend
+- `login.html` — GIS token client, botón "Continuar con Google", redirige a `main.html`
+- `main.html`, `perfil.html`, `ranking.html`, `logros.html` — todos migrados a `auth.js`
+- `calendario.html` — totalmente funcional con:
+  - Chat con Gemini (historial persistente en sesión)
+  - **TTS** — botón 🔇/🔊, respuestas de Gemini leídas en voz (Web Speech API, `es-MX`)
+  - **Voice input** — botón 🎤, dictado con auto-envío (Chrome/Edge)
+  - **Panel de horario semanal** — FAB 📋, eventos de los próximos 7 días agrupados por día, botón "Editar" pre-llena el chat de Gemini
+
+### Infraestructura
+- `docker-compose.yml` — PostgreSQL 15 + Redis 7 + backend FastAPI (con `--reload`)
+- `backend/Dockerfile` — Python 3.12-slim con gcc y libpq-dev para asyncpg
+- `.env.example` actualizado: sin Firebase, hosts correctos (`postgres`, `redis`)
 
 ---
 
-## Pendiente (por integrante)
+## Pendiente
 
-| Qué | Quién | Bloqueado por |
-|-----|-------|---------------|
-| Descargar `firebase-credentials.json` y probar login | Víctor | — |
-| Implementar `llm_orchestrator.py` con Gemini 3.0 Flash | Víctor | firebase-credentials |
-| Implementar `gemini_agent.py` y `action_tools.py` | Víctor | llm_orchestrator |
-| Conectar frontend con todos los endpoints | Oswaldo | routers listos ✓ |
-| Restaurar `docker-compose.yml` (PostgreSQL + Redis) | Dennis | — |
-| Integrar Google Calendar API | Alan / Ángel | — |
-| Tabla de `achievements` en la DB | Martin | — |
-| Agregar `carrera` y `semestre` al modelo `User` | Martin | — |
-| Mergear todas las branches a `main` | Alan | — |
+| Qué | Quién | Estado |
+|-----|-------|--------|
+| Tabla `achievements` en PostgreSQL | Martin | Bloqueado (pendiente Martin) |
+| Agregar `carrera` y `semestre` al modelo `User` | Martin | Bloqueado (pendiente Martin) |
+| Aplicar `schema.sql` al contenedor Docker de PostgreSQL | Dennis / Alan | Pendiente |
+| Mergear `feature/google-oauth` a `main` | Alan | Pendiente (falta prueba end-to-end) |
+| Prueba end-to-end: Docker + `.env` real + schema | Todo el equipo | Pendiente |
+| Corregir bug `is_new_user` en `users.py` (siempre es `False`) | Alan / Víctor | Identificado, no bloqueante |
+| Persistencia de historial de chat en Redis/PostgreSQL | Víctor | Nice-to-have |
+| CI/CD pipeline | Dennis / Oscar | En progreso (branch `oscar_ci/cd`) |
 
 ---
 
-## Decisiones de arquitectura tomadas
+## Decisiones de arquitectura — actualizadas
 
-- **Auth**: Firebase Auth (Google OAuth + email/password). El backend solo verifica tokens, no maneja contraseñas.
-- **Calendario**: Google Calendar API como fuente de verdad (no se construye calendario propio).
-- **IA**: Gemini 3.0 Flash con function calling. Gemini interpreta el mensaje, el backend ejecuta la acción.
+- **Auth**: Google OAuth directo con GIS. Se eliminó Firebase porque Google lo discontinuará. Un solo access token con scope de calendario.
+- **Calendario**: Google Calendar API como fuente de verdad.
+- **IA**: Gemini Flash con LangGraph como orchestrator. Gemini clasifica intención → backend ejecuta acción.
 - **Achievements**: Tabla separada en PostgreSQL (Martin la implementará), no JSONB en `rankings`.
-- **Ranking en tiempo real**: Redis Sorted Sets — lectura O(log n), no toca PostgreSQL.
-- **Cache de chat**: Redis con TTL de 1 hora — evita llamar a Gemini para preguntas repetidas.
+- **Ranking en tiempo real**: Redis Sorted Sets.
+- **TTS / Voz**: Web Speech API del navegador (sin costo de servidor, sin dependencias extra).
 
 ---
 
 ## Cómo correr el proyecto localmente
 
 ```bash
-# 1. Clonar
+# 1. Clonar y pararse en la rama correcta
 git clone https://github.com/MasamuneL/HermesApp.git
 cd HermesApp
+git checkout feature/google-oauth
 
 # 2. Variables de entorno
 cp .env.example .env
-# Edita .env con tus credenciales
+# Llenar: GEMINI_API_KEY y verificar GOOGLE_CLIENT_ID
 
-# 3. Agregar firebase-credentials.json en la raíz (pedírselo a Víctor)
+# 3. Levantar PostgreSQL, Redis y backend con Docker
+docker-compose up --build
 
-# 4. Levantar DB y Redis
-docker-compose up -d
-
-# 5. Instalar dependencias
-pip install -r requirements.txt
-
-# 6. Correr servidor
-uvicorn app.main:app --reload
+# 4. Aplicar el schema de base de datos (una sola vez)
+docker exec -i hermes_postgres psql -U hermes_user -d hermes < backend/database/schema.sql
 
 # API docs en: http://localhost:8000/docs
+# Frontend: abrir Frontend/login.html en el navegador (o servir con Live Server)
 ```
+
+> **Nota**: El frontend hace fetch a `http://localhost:8000`. Para que Google OAuth funcione, `http://localhost` debe estar en los **Authorized JavaScript origins** de tu OAuth Client ID en Google Cloud Console.
