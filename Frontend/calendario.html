@@ -265,6 +265,7 @@
     let pendingEvento = null;
     let chatOpen      = false;
     let currentHeaders = {};
+    let chatHistory   = []; // historial de la sesión: [{role, content}]
 
     requireAuth(async user => {
       currentHeaders = await authHeaders();
@@ -342,25 +343,22 @@
       showTyping();
 
       try {
-        // POST /api/chat/ — ChatRequest: { message }
+        // POST /api/chat/ — ChatRequest: { message, history }
         // ChatResponse: { response, intent, cached }
         const res = await fetch(`${API_BASE}/api/chat/`, {
           method: "POST",
           headers: currentHeaders,
-          body: JSON.stringify({ message: text })
+          body: JSON.stringify({ message: text, history: chatHistory })
         });
 
         removeTyping();
 
-        if (res.status === 501) {
-          // Chat aún no implementado por Víctor
-          appendPendingMsg("El chat con Gemini está siendo implementado. Por ahora puedes crear eventos manualmente.");
-          setSendDisabled(false);
-          return;
-        }
-
         if (!res.ok) throw new Error();
         const data = await res.json();
+
+        // Actualizar historial con el intercambio completo
+        chatHistory.push({ role: "user", content: text });
+        chatHistory.push({ role: "assistant", content: data.response });
 
         // Si el intent es "crear_evento", el back devuelve el evento en response como JSON
         if (data.intent === "crear_evento") {

@@ -28,7 +28,7 @@ def get_llm(temperature: float = 0.6) -> ChatGoogleGenerativeAI:
     """Retorna una instancia configurada de Gemini 2.5 Flash."""
     return ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        google_api_key=os.getenv("GEMINI_API_KEY"),
         temperature=temperature,
     )
 

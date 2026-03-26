@@ -1,9 +1,11 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 # Lo que el frontend MANDA
 class ChatRequest(BaseModel):
     message: str
+    history: Optional[list[dict]] = []  # [{role: "user"|"assistant", content: str}]
 
 
 # Lo que el backend DEVUELVE

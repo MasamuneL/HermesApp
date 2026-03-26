@@ -64,6 +64,7 @@ async def send_message_endpoint(
         user_id=user_id,
         google_token=google_token,
         is_new_user=not user.is_active,
+        chat_history=body.history,
     )
 
     await cache_chat_response(body.message, result["response"], user_id)
