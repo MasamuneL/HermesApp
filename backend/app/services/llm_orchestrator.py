@@ -68,6 +68,7 @@ class HermesStateRequired(TypedDict):
 
 
 class HermesState(HermesStateRequired, total=False):
+    user_name: str
     image_base64: str
     image_mime_type: str
     intent: str
@@ -86,10 +87,13 @@ async def classify_node(state: HermesState) -> dict:
     Prioridad: is_new_user → image_base64 → LLM classification
     """
     if state.get("is_new_user", False):
+        print(f"[HERMES] user={state['user_id']} → onboarding (sin calendario configurado)")
         return {"intent": "onboarding"}
     if state.get("image_base64"):
+        print(f"[HERMES] user={state['user_id']} → image_ocr (imagen recibida)")
         return {"intent": "image_ocr"}
     intent = await classify_intent(state["message"])
+    print(f"[HERMES] user={state['user_id']} → {intent} | msg='{state['message'][:60]}'")
     return {"intent": intent}
 
 
@@ -98,6 +102,7 @@ async def question_node(state: HermesState) -> dict:
     Responde preguntas generales sobre el calendario del usuario.
     Enriquece el contexto con los próximos eventos antes de responder.
     """
+    print(f"[HERMES][question_node] Consultando eventos y generando respuesta...")
     google_token = state.get("google_token")
     events_context = ""
 
@@ -124,6 +129,7 @@ async def calendar_action_node(state: HermesState) -> dict:
     Maneja acciones CRUD sobre Google Calendar.
     Usa Gemini para parsear la intención en una acción concreta y ejecutarla.
     """
+    print(f"[HERMES][calendar_action_node] Procesando acción de calendario...")
     google_token = state.get("google_token")
     if not google_token:
         return {
@@ -240,6 +246,7 @@ async def image_ocr_node(state: HermesState) -> dict:
     Procesa una imagen de horario con Gemini Vision.
     Extrae las clases y las registra en Google Calendar como eventos semanales recurrentes.
     """
+    print(f"[HERMES][image_ocr_node] Analizando imagen de horario con Gemini Vision...")
     image_base64 = state.get("image_base64")
     mime_type = state.get("image_mime_type", "image/png")
     google_token = state.get("google_token")
@@ -307,33 +314,42 @@ async def image_ocr_node(state: HermesState) -> dict:
 async def onboarding_node(state: HermesState) -> dict:
     """
     Guía al usuario nuevo a través del flujo de onboarding.
-    Usa el historial de chat para determinar en qué paso del flujo está.
 
-    Pasos:
-    1. Solicitar nombre
-    2. Pedir imagen del horario
-    3. Pedir fechas de inicio y fin del ciclo escolar
-    4. Confirmar que todo está registrado
+    Flujo:
+    1. Saluda al usuario por su nombre (viene de Google OAuth).
+    2. Explica brevemente qué puede hacer Hermes.
+    3. Pide que suba una imagen de su horario de clases para configurar el calendario.
+    4. Una vez subido el horario, confirma que todo quedó registrado.
     """
+    print(f"[HERMES][onboarding_node] Iniciando flujo de onboarding...")
+
     chat_history = state.get("chat_history", [])
+    user_name = state.get("user_name", "")
+    first_name = user_name.split()[0] if user_name else ""
 
-    onboarding_system = """Eres Hermes guiando a un nuevo usuario universitario.
-Debes seguir este flujo de forma natural y amigable:
-1. Si no sabes el nombre del usuario, pregúntaselo.
-2. Cuando te diga su nombre, salúdalo y pídele que suba una imagen de su horario de clases.
-3. Cuando suba el horario, pide las fechas de inicio y fin de su ciclo escolar.
-4. Con esa información, confirma que todo quedó registrado y que ya puede empezar a usar Hermes.
+    name_line = f"El nombre del usuario es {first_name}." if first_name else ""
 
-Determina en qué paso estás según el historial de conversación y avanza al siguiente.
-NO uses asteriscos, emojis ni markdown. Sé conversacional y breve."""
+    onboarding_system = f"""Eres Hermes, asistente académico para universitarios.
+{name_line}
+El usuario acaba de entrar por primera vez. Sigue este flujo de forma natural y amigable:
+1. Si el historial está vacío, salúdalo por su nombre y explica en 1-2 frases qué puede hacer Hermes (organizar su calendario, recordarle eventos, agendar clases).
+   Luego pídele que suba una foto de su horario de clases para configurar su calendario automáticamente.
+2. Si el usuario responde con preguntas o comentarios, respóndelos brevemente y vuelve a pedir la imagen del horario.
+3. Cuando el horario ya haya sido registrado (el sistema lo confirmará), felicítalo y dile que ya puede hacer preguntas sobre su semana.
 
+Determina en qué paso estás según el historial. NO uses asteriscos, emojis ni markdown. Sé breve y directo."""
+
+    # Si es el mensaje de inicialización del sistema, no lo incluimos en el historial de usuario
+    user_message = state["message"]
     lc_messages = [SystemMessage(content=onboarding_system)]
     for msg in chat_history:
         if msg["role"] == "user":
             lc_messages.append(HumanMessage(content=msg["content"]))
         else:
             lc_messages.append(AIMessage(content=msg["content"]))
-    lc_messages.append(HumanMessage(content=state["message"]))
+
+    if user_message != "__init__":
+        lc_messages.append(HumanMessage(content=user_message))
 
     llm = get_llm()
     response = await llm.ainvoke(lc_messages)
@@ -345,6 +361,7 @@ async def suggest_schedule_node(state: HermesState) -> dict:
     Sugiere ajustes al itinerario del usuario basándose en sus eventos de Calendar.
     Considera el contexto completo del calendario antes de proponer horarios.
     """
+    print(f"[HERMES][suggest_schedule_node] Generando sugerencias de horario...")
     google_token = state.get("google_token")
     events_context = ""
 
@@ -433,6 +450,7 @@ async def process_message(
     user_id: str,
     google_token: str,
     is_new_user: bool = False,
+    user_name: str = "",
     chat_history: Optional[list] = None,
     image_base64: Optional[str] = None,
     image_mime_type: str = "image/png",
@@ -460,6 +478,7 @@ async def process_message(
         "user_id": user_id,
         "google_token": google_token,
         "is_new_user": is_new_user,
+        "user_name": user_name,
         "chat_history": chat_history or [],
     }
     if image_base64:

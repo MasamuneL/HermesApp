@@ -276,9 +276,8 @@
       </div>
     </div>
     <div class="chat-messages" id="chatMessages">
-      <div class="msg bot">
-        ¡Hola! Puedo agendar eventos por ti. Dime algo como:<br><br>
-        <em style="color:var(--muted)">"Agenda que tengo que recoger mi pasaporte el 20 de marzo a las 10am"</em>
+      <div class="msg bot" id="greetingMsg">
+        <span style="color:var(--muted)">Cargando...</span>
         <div class="msg-time">ahora</div>
       </div>
     </div>
@@ -313,6 +312,20 @@
       currentHeaders = await authHeaders();
       initCalendar();
       initVoice();
+      // Obtener saludo inicial desde el backend (onboarding o bienvenida de vuelta)
+      try {
+        const res = await fetch(`${API_BASE}/api/chat/greeting`, { headers: currentHeaders });
+        if (res.ok) {
+          const data = await res.json();
+          const greetEl = document.getElementById("greetingMsg");
+          if (greetEl) {
+            greetEl.innerHTML = data.message.replace(/\n/g, "<br>") +
+              `<div class="msg-time">${new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}</div>`;
+          }
+          // Agregar al historial para que Gemini tenga contexto
+          chatHistory.push({ role: "assistant", content: data.message });
+        }
+      } catch (_) { /* silencioso si no hay backend */ }
     });
 
     function initCalendar() {

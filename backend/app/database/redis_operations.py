@@ -49,22 +49,34 @@ async def cache_chat_response(message: str, response: str, user_id: str, ttl: in
 async def get_cached_chat_response(message: str, user_id: str) -> Optional[str]:
     """
     Obtiene respuesta cacheada del chatbot
-    
+
     Retorna:
         Respuesta si existe en cache, None si no existe
-    
-    Ejemplo:
-        cached = await get_cached_chat_response("¿Qué tareas tengo?", "abc-123")
-        if cached:
-            print("¡Ya tengo la respuesta en cache!")
-            return cached
-        else:
-            print("No hay cache, llamar a Gemini")
     """
     cache_key = hashlib.md5(f"{user_id}:{message}".encode()).hexdigest()
     key = f"chat:response:{cache_key}"
-    
+
     return await redis_client.get(key)
+
+
+# ==========================================
+# ONBOARDING
+# ==========================================
+
+async def get_onboarding_status(user_id: str) -> bool:
+    """
+    Retorna True si el usuario ya completó el onboarding (tiene nombre y calendario).
+    El flag se guarda en Redis con TTL de 30 días.
+    """
+    return await redis_client.exists(f"onboarding:done:{user_id}") > 0
+
+
+async def set_onboarding_complete(user_id: str) -> None:
+    """
+    Marca el onboarding del usuario como completado.
+    Se llama cuando el usuario ya tiene nombre y al menos un evento en Google Calendar.
+    """
+    await redis_client.set(f"onboarding:done:{user_id}", "1", ex=60 * 60 * 24 * 30)
 
 async def clear_user_chat_cache(user_id: str):
     """
