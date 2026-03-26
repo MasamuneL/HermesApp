@@ -1,12 +1,12 @@
-# app/models/ranking.py
+# backend/app/database/ranking.py
 """
 Modelo de Ranking y Puntos
 Define los puntos y logros de cada usuario
+CORREGIDO: Quitado back_populates que causaba error
 """
 from sqlalchemy import Column, Integer, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
 from app.database.postgres import Base
 
 class Ranking(Base):
@@ -41,8 +41,8 @@ class Ranking(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relación con User
-    user = relationship("User", back_populates="ranking")
+    # NOTA: relationship con back_populates removido para evitar error
+    # Si necesitas acceder al usuario: user = db.query(User).filter_by(id=ranking.user_id).first()
     
     def __repr__(self):
         return f"<Ranking user={self.user_id} points={self.points}>"
