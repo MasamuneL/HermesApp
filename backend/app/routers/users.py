@@ -1,5 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
+from datetime import date
+import os
 
 from app.database.postgres import get_db
 from app.database.crud_users import (
@@ -52,18 +55,64 @@ async def get_my_profile(
 
 @router.put("/me", response_model=UserResponse)
 async def update_my_profile(
-    full_name: str,
+    full_name: Optional[str] = None,
+    u_degree: Optional[str] = None,
+    semester: Optional[int] = None,
+    universidad: Optional[str] = None,
+    birth_date: Optional[date] = None,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Actualiza el nombre del usuario autenticado.
+    Actualiza el perfil del usuario autenticado. Todos los campos son opcionales.
     """
     user = await get_user_by_email(db, current_user["email"])
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    updated = await update_user(db, user.id, full_name=full_name)
+    updated = await update_user(
+        db, user.id,
+        full_name=full_name,
+        u_degree=u_degree,
+        semester=semester,
+        universidad=universidad,
+        birth_date=birth_date,
+    )
+    return updated
+
+
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "static/fotos")
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+
+@router.post("/foto", response_model=UserResponse)
+async def upload_photo(
+    foto: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Sube o reemplaza la foto de perfil del usuario autenticado.
+    Acepta jpeg, png y webp. Máximo ~5 MB (limitado por nginx/proxy en producción).
+    """
+    if foto.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Formato no permitido. Usa jpeg, png o webp.")
+
+    user = await get_user_by_email(db, current_user["email"])
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    ext = (foto.filename or "foto").rsplit(".", 1)[-1].lower()
+    filename = f"{user.id}.{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+
+    contents = await foto.read()
+    with open(filepath, "wb") as f:
+        f.write(contents)
+
+    photo_url = f"/static/fotos/{filename}"
+    updated = await update_user(db, user.id, photo_url=photo_url)
     return updated
 
 

@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 from app.routers import users, ranking, chat, logros, calendar
@@ -27,6 +28,10 @@ app.include_router(ranking.router)
 app.include_router(chat.router)
 app.include_router(logros.router)
 app.include_router(calendar.router)
+
+
+os.makedirs("static/fotos", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/")

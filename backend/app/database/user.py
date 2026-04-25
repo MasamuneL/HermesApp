@@ -5,7 +5,7 @@ Tabla: users
 Agregados: u_degree, semester
 """
 import uuid
-from sqlalchemy import Column, String, Boolean, Integer, DateTime
+from sqlalchemy import Column, String, Boolean, Integer, DateTime, Date
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -21,6 +21,9 @@ class User(Base):
     google_id = Column(String(255), unique=True)
     u_degree = Column(String(255))
     semester = Column(Integer)
+    universidad = Column(String(255))
+    birth_date = Column(Date)
+    photo_url = Column(String(500))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     is_active = Column(Boolean, default=True)

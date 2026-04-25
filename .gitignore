@@ -1,9 +1,9 @@
-<<<<<<< HEAD
 # Variables de entorno — contienen contraseñas y API keys
 .env
 
 # Credenciales de Firebase — nunca subir al repo
 firebase-credentials.json
+backend/app/credentials.json
 
 # Google Calendar OAuth — se generan automáticamente al autenticar
 token.json
@@ -43,12 +43,6 @@ node_modules/
 # Sistema operativo
 .DS_Store
 Thumbs.db
-=======
-# Archivos ocultos del sistema macOS
-.DS_Store
-backend/.DS_Store
-backend/app/.DS_Store 
 
-# Credenciales y secretos (¡NUNCA SUBIR!)
-backend/app/credentials.json
->>>>>>> 4822814 (Added .gitignore)
+# Fotos de perfil subidas por usuarios (generadas en runtime)
+backend/static/fotos/

@@ -114,11 +114,16 @@ async def update_user(
     db: AsyncSession,
     user_id: uuid.UUID,
     full_name: str = None,
-    email: str = None
+    email: str = None,
+    u_degree: str = None,
+    semester: int = None,
+    universidad: str = None,
+    birth_date=None,
+    photo_url: str = None,
 ) -> Optional[User]:
     """
     Actualiza información del usuario
-    
+
     Ejemplo:
         user = await update_user(
             db,
@@ -132,6 +137,16 @@ async def update_user(
         update_data["full_name"] = full_name
     if email is not None:
         update_data["email"] = email
+    if u_degree is not None:
+        update_data["u_degree"] = u_degree
+    if semester is not None:
+        update_data["semester"] = semester
+    if universidad is not None:
+        update_data["universidad"] = universidad
+    if birth_date is not None:
+        update_data["birth_date"] = birth_date
+    if photo_url is not None:
+        update_data["photo_url"] = photo_url
     
     if not update_data:
         return await get_user_by_id(db, user_id)
