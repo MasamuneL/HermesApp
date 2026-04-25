@@ -228,9 +228,10 @@
 
         showToast(nuevoEstado ? `+${logro.ach_points} pts — ¡Logro completado!` : "Marcado como pendiente");
 
-      } catch {
-        logro.status_completed = nuevoEstado; // actualiza local igual
-        showToast(nuevoEstado ? `+${logro.ach_points} pts` : "Marcado como pendiente");
+      } catch (err) {
+        if (err?.message !== "Sesión expirada") {
+          showToast("Error al guardar el logro", true);
+        }
       }
 
       setAllButtonsDisabled(false);
@@ -279,14 +280,17 @@
               <div class="logro-pts">${l.ach_points} <span>pts</span></div>
               <button
                 class="toggle-done ${l.status_completed ? 'hecho' : 'pendiente'}"
-                id="btn-${l.ach_id}"
-                onclick="toggleLogro('${l.ach_id}')"
+                id="btn-${escapeHtml(String(l.ach_id))}"
+                data-id="${escapeHtml(String(l.ach_id))}"
               >
                 ${l.status_completed ? '✓ Hecho' : 'Marcar hecho'}
               </button>
             </div>
           </div>`;
       }).join("");
+      list.querySelectorAll(".toggle-done").forEach(btn => {
+        btn.addEventListener("click", () => toggleLogro(btn.dataset.id));
+      });
     }
 
     function updateStats() {

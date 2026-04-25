@@ -51,3 +51,17 @@ export function signOut() {
   sessionStorage.removeItem("google_token");
   sessionStorage.removeItem("user_info");
 }
+
+/**
+ * Wrapper de fetch() que detecta tokens expirados (401) y redirige al login.
+ * Usar en lugar de fetch() crudo para todas las llamadas autenticadas al backend.
+ */
+export async function fetchWithAuth(url, options = {}) {
+  const response = await fetch(url, options);
+  if (response.status === 401) {
+    signOut();
+    window.location.href = "login.html";
+    throw new Error("Sesión expirada");
+  }
+  return response;
+}

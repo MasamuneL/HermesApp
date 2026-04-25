@@ -149,7 +149,7 @@
     async function loadTopRanking() {
       try {
         // GET /api/ranking/top — no requiere auth
-        const res = await fetch(`${API_BASE}/api/ranking/top?limit=10`);
+        const res = await fetchWithAuth(`${API_BASE}/api/ranking/top?limit=10`);
         if (!res.ok) throw new Error();
         const { data } = await res.json();
         // data = [ { user_id, points, name? }, ... ] ordenado por puntos desc
