@@ -175,29 +175,21 @@
   </main>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, auth, signOut } from "./firebase.js";
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
 
     let allEvents = [];
-    let googleToken = null;
 
     requireAuth(async user => {
-      // Nombre del usuario
       document.getElementById("userName").textContent =
-        user.displayName || user.email.split("@")[0];
-
-      // Obtener Google token si entró con Google
-      // (necesario para Google Calendar)
-      // googleToken = credential.accessToken — se obtiene en el login con popup
+        user.name || user.email.split("@")[0];
 
       await Promise.all([loadEvents(), loadRank()]);
     });
 
     async function loadEvents() {
       try {
-        const headers = await authHeaders(
-          googleToken ? { "X-Google-Token": googleToken } : {}
-        );
-        const res = await fetch(`${API_BASE}/api/calendar/events`, { headers });
+        const headers = await authHeaders();
+        const res = await fetchWithAuth(`${API_BASE}/api/calendar/events`, { headers });
         if (!res.ok) throw new Error();
         const data = await res.json();
 
@@ -225,7 +217,7 @@
 
     async function loadRank() {
       try {
-        const res = await fetch(`${API_BASE}/api/ranking/me`, { headers: await authHeaders() });
+        const res = await fetchWithAuth(`${API_BASE}/api/ranking/me`, { headers: await authHeaders() });
         if (!res.ok) throw new Error();
         const data = await res.json();
         document.getElementById("statRank").textContent = `#${data.data.rank}`;
@@ -264,7 +256,7 @@
     };
 
     window.handleLogout = async function() {
-      await signOut(auth);
+      signOut();
       window.location.href = "login.html";
     };
 

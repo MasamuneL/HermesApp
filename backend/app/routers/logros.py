@@ -1,19 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Header
-from firebase_admin import auth as firebase_auth
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/api/logros", tags=["Logros"])
-
-
-async def get_current_user(authorization: str = Header()):
-    """
-    Dependency de Firebase Auth.
-    Verifica el token Bearer y retorna el payload decodificado.
-    """
-    try:
-        token = authorization.replace("Bearer ", "")
-        return firebase_auth.verify_id_token(token)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Token inválido o expirado")
 
 
 @router.get("/me")

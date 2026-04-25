@@ -1,34 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, Header
-from firebase_admin import auth as firebase_auth
+from fastapi import APIRouter, Depends, HTTPException
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2.credentials import Credentials
 from datetime import datetime, timezone
-from typing import Optional
 
+from app.dependencies.auth import get_current_user
 from app.schemas.calendar import CalendarEventResponse, CreateEventRequest
 
 router = APIRouter(prefix="/api/calendar", tags=["Calendario"])
 
 
-async def get_current_user(authorization: str = Header()):
-    """
-    Dependency de Firebase Auth.
-    Verifica el token Bearer y retorna el payload decodificado.
-    """
-    try:
-        token = authorization.replace("Bearer ", "")
-        return firebase_auth.verify_id_token(token)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Token inválido o expirado")
-
-
 def build_calendar_service(google_token: str):
     """
     Crea el cliente de Google Calendar usando el access token OAuth del usuario.
-    El frontend obtiene este token de Firebase después del login con Google.
-    Nota: googleapiclient es síncrono — se llama directamente en endpoints async
-    ya que las operaciones son rápidas para un MVP.
+    El mismo token que se usa para autenticación también tiene scope de calendar.
     """
     credentials = Credentials(token=google_token)
     return build("calendar", "v3", credentials=credentials)
@@ -37,23 +22,18 @@ def build_calendar_service(google_token: str):
 @router.get("/events", response_model=list[CalendarEventResponse])
 async def get_events(
     current_user: dict = Depends(get_current_user),
-    x_google_token: str = Header(),
     max_results: int = 20,
 ):
     """
     Retorna los próximos eventos del Google Calendar del usuario autenticado.
 
     Headers requeridos:
-    - Authorization: Bearer <firebase_token>
-    - X-Google-Token: <google_oauth_access_token>
+    - Authorization: Bearer <google_oauth_access_token>
 
-    El frontend obtiene X-Google-Token así:
-        const result = await signInWithPopup(auth, googleProvider);
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const googleToken = credential.accessToken;
+    El mismo token de auth se usa para acceder a Google Calendar API.
     """
     try:
-        service = build_calendar_service(x_google_token)
+        service = build_calendar_service(current_user["google_token"])
         now = datetime.now(timezone.utc).isoformat()
 
         result = (
@@ -94,15 +74,12 @@ async def get_events(
 async def create_event(
     body: CreateEventRequest,
     current_user: dict = Depends(get_current_user),
-    x_google_token: str = Header(),
 ):
     """
     Crea un nuevo evento en el Google Calendar del usuario autenticado.
-    Usado principalmente para agregar clases y exámenes desde el OCR del horario.
 
     Headers requeridos:
-    - Authorization: Bearer <firebase_token>
-    - X-Google-Token: <google_oauth_access_token>
+    - Authorization: Bearer <google_oauth_access_token>
 
     Body ejemplo:
         {
@@ -114,7 +91,7 @@ async def create_event(
         }
     """
     try:
-        service = build_calendar_service(x_google_token)
+        service = build_calendar_service(current_user["google_token"])
 
         event_body = {
             "summary": body.title,
@@ -128,7 +105,6 @@ async def create_event(
             },
         }
 
-        # Agregar campos opcionales solo si vienen en el request
         if body.description:
             event_body["description"] = body.description
         if body.location:

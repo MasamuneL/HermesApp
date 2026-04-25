@@ -128,7 +128,7 @@
   </main>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, auth, signOut } from "./firebase.js";
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
 
     requireAuth(async () => {
       await Promise.all([loadMyRank(), loadTopRanking()]);
@@ -136,11 +136,11 @@
 
     async function loadMyRank() {
       try {
-        const res = await fetch(`${API_BASE}/api/ranking/me`, { headers: await authHeaders() });
+        const res = await fetchWithAuth(`${API_BASE}/api/ranking/me`, { headers: await authHeaders() });
         if (!res.ok) throw new Error();
         const { data } = await res.json();
         document.getElementById("myRank").textContent   = `#${data.rank}`;
-        document.getElementById("myPoints").textContent = `${data.points.toLocaleString()} pts`;
+        document.getElementById("myPoints").textContent = `${(data.points ?? 0).toLocaleString()} pts`;
       } catch {
         document.getElementById("myRank").textContent = "—";
       }
@@ -149,7 +149,7 @@
     async function loadTopRanking() {
       try {
         // GET /api/ranking/top — no requiere auth
-        const res = await fetch(`${API_BASE}/api/ranking/top?limit=10`);
+        const res = await fetchWithAuth(`${API_BASE}/api/ranking/top?limit=10`);
         if (!res.ok) throw new Error();
         const { data } = await res.json();
         // data = [ { user_id, points, name? }, ... ] ordenado por puntos desc
@@ -207,7 +207,7 @@
       `).join("");
     }
 
-    window.handleLogout = async () => { await signOut(auth); window.location.href = "login.html"; };
+    window.handleLogout = async () => { signOut(); window.location.href = "login.html"; };
     window.toggleMenu   = () => document.getElementById("mainMenu").classList.toggle("open");
     document.addEventListener("click", e => {
       if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown"))

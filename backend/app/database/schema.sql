@@ -17,12 +17,20 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(255),
     password_hash VARCHAR(255),
     google_id VARCHAR(255) UNIQUE,
-    u_degree VARCHAR(255),           -- NUEVO: Carrera del estudiante
-    semester INTEGER,                 -- NUEVO: Semestre actual
+    u_degree VARCHAR(255),
+    semester INTEGER,
+    universidad VARCHAR(255),
+    birth_date DATE,
+    photo_url VARCHAR(500),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT TRUE
 );
+
+-- Migración segura: agrega columnas si la tabla ya existía antes de este cambio
+ALTER TABLE users ADD COLUMN IF NOT EXISTS universidad VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date DATE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url VARCHAR(500);
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
