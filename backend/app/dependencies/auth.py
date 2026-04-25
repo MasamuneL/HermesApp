@@ -1,7 +1,7 @@
 """
 dependencies/auth.py — Dependencia compartida de autenticación Google OAuth.
 
-Verifica el access token de Google llamando al endpoint tokeninfo.
+Verifica el access token de Google llamando al endpoint userinfo.
 Todos los routers importan get_current_user desde aquí.
 """
 
@@ -11,19 +11,20 @@ from fastapi import Header, HTTPException
 
 async def get_current_user(authorization: str = Header()) -> dict:
     """
-    Verifica el Google OAuth access token llamando al tokeninfo de Google.
+    Verifica el Google OAuth access token llamando al userinfo de Google.
     El frontend obtiene este token via Google Identity Services (GIS).
 
     Retorna: {"uid": str, "email": str, "name": str, "google_token": str}
 
+    Usamos userinfo (no tokeninfo) porque tokeninfo no devuelve `name`.
     El campo google_token se reutiliza para llamadas a Google Calendar API.
     """
     token = authorization.removeprefix("Bearer ").strip()
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                "https://oauth2.googleapis.com/tokeninfo",
-                params={"access_token": token},
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {token}"},
                 timeout=5.0,
             )
         if resp.status_code != 200:

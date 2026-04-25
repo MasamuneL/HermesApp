@@ -293,7 +293,7 @@
   </div>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, signOut } from "./auth.js";
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
 
     const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -308,6 +308,15 @@
     let recognition       = null;
     const SpeechRec       = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
     requireAuth(async user => {
       currentHeaders = await authHeaders();
       initCalendar();
@@ -317,13 +326,13 @@
       const setGreeting = (text) => {
         const greetEl = document.getElementById("greetingMsg");
         if (greetEl) {
-          greetEl.innerHTML = text.replace(/\n/g, "<br>") +
+          greetEl.innerHTML = escapeHtml(text).replace(/\n/g, "<br>") +
             `<div class="msg-time">${new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}</div>`;
         }
         chatHistory.push({ role: "assistant", content: text });
       };
       try {
-        const res = await fetch(`${API_BASE}/api/chat/greeting`, { headers: currentHeaders });
+        const res = await fetchWithAuth(`${API_BASE}/api/chat/greeting`, { headers: currentHeaders });
         if (res.ok) {
           const data = await res.json();
           setGreeting(data.message);
@@ -345,8 +354,8 @@
         // Carga eventos desde Google Calendar via back
         events: async (info, successCallback, failureCallback) => {
           try {
-            const res = await fetch(`${API_BASE}/api/calendar/events?max_results=50`, {
-              headers: currentHeaders
+            const res = await fetchWithAuth(`${API_BASE}/api/calendar/events?max_results=50`, {
+              headers: await authHeaders()
             });
             if (!res.ok) throw new Error();
             const data = await res.json();
@@ -409,7 +418,7 @@
       try {
         // POST /api/chat/ — ChatRequest: { message, history }
         // ChatResponse: { response, intent, cached }
-        const res = await fetch(`${API_BASE}/api/chat/`, {
+        const res = await fetchWithAuth(`${API_BASE}/api/chat/`, {
           method: "POST",
           headers: currentHeaders,
           body: JSON.stringify({ message: text, history: chatHistory })
@@ -450,7 +459,7 @@
       if (!pendingEvento) return;
       try {
         // POST /api/calendar/events — CreateEventRequest: { title, start, end, description, location }
-        const res = await fetch(`${API_BASE}/api/calendar/events`, {
+        const res = await fetchWithAuth(`${API_BASE}/api/calendar/events`, {
           method: "POST",
           headers: currentHeaders,
           body: JSON.stringify({
@@ -510,7 +519,7 @@
       const msgs = document.getElementById("chatMessages");
       const div  = document.createElement("div");
       div.className = `msg ${type}`;
-      div.innerHTML = `${text}<div class="msg-time">${getTime()}</div>`;
+      div.innerHTML = `${escapeHtml(text).replace(/\n/g, "<br>")}<div class="msg-time">${getTime()}</div>`;
       msgs.appendChild(div); scrollChat();
     }
 
@@ -600,7 +609,7 @@
       const list = document.getElementById("scheduleList");
       list.innerHTML = '<p class="sp-empty">Cargando…</p>';
       try {
-        const res = await fetch(`${API_BASE}/api/calendar/events?max_results=50`, { headers: currentHeaders });
+        const res = await fetchWithAuth(`${API_BASE}/api/calendar/events?max_results=50`, { headers: currentHeaders });
         if (!res.ok) throw new Error("Error al obtener eventos");
         const events = await res.json();
 
@@ -622,16 +631,19 @@
         }
         list.innerHTML = Object.entries(grouped).map(([day, evs]) => `
           <div class="sp-day">
-            <div class="sp-day-label">${day}</div>
+            <div class="sp-day-label">${escapeHtml(day)}</div>
             ${evs.map(e => `
               <div class="sp-event">
-                <span class="sp-event-title">${e.title}</span>
+                <span class="sp-event-title">${escapeHtml(e.title)}</span>
                 <span class="sp-event-time">${new Date(e.start).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</span>
-                <button class="sp-edit-btn" onclick="editWithGemini('${e.title.replace(/'/g,"\\'")}','${e.start}')">Editar</button>
+                <button class="sp-edit-btn" data-title="${escapeHtml(e.title)}" data-start="${escapeHtml(e.start)}">Editar</button>
               </div>
             `).join('')}
           </div>
         `).join('');
+        list.querySelectorAll('.sp-edit-btn').forEach(btn => {
+          btn.addEventListener('click', () => editWithGemini(btn.dataset.title, btn.dataset.start));
+        });
       } catch (err) {
         list.innerHTML = `<p class="sp-empty">No se pudieron cargar los eventos</p>`;
       }

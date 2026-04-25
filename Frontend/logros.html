@@ -141,7 +141,7 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, signOut } from "./auth.js";
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
 
     // Mapeo de ach_rank del schema AchievementsResponse a dificultad visual
     // ach_rank: 1=fácil, 2=medio, 3=difícil, 4=experto
@@ -151,6 +151,15 @@
       3: { key:"dificil", emoji:"📕", label:"Difícil" },
       4: { key:"experto", emoji:"💎", label:"Experto" },
     };
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
 
     let logros = [];
     let currentFilter = "todos";
@@ -163,7 +172,7 @@
       try {
         // GET /api/logros/me
         // AchievementsResponse: { ach_id, ach_title, ach_desc, ach_points, ach_rank, fecha_objetivo, status_completed }
-        const res = await fetch(`${API_BASE}/api/logros/me`, { headers: await authHeaders() });
+        const res = await fetchWithAuth(`${API_BASE}/api/logros/me`, { headers: await authHeaders() });
 
         if (res.status === 501) {
           // Módulo pendiente — muestra aviso
@@ -196,7 +205,7 @@
 
       try {
         // PATCH /api/logros/{id}
-        const res = await fetch(`${API_BASE}/api/logros/${id}`, {
+        const res = await fetchWithAuth(`${API_BASE}/api/logros/${id}`, {
           method: "PATCH",
           headers: await authHeaders(),
           body: JSON.stringify({ completado: nuevoEstado })
@@ -211,7 +220,7 @@
           .reduce((s, l) => s + l.ach_points, 0);
 
         // PUT /api/perfil/puntos — guarda total en DB
-        await fetch(`${API_BASE}/api/users/puntos`, {
+        await fetchWithAuth(`${API_BASE}/api/users/puntos`, {
           method: "PUT",
           headers: await authHeaders(),
           body: JSON.stringify({ puntos: nuevaSuma })
@@ -260,9 +269,9 @@
           <div class="logro-card ${clase}" style="animation-delay:${i * 0.05}s">
             <div class="diff-badge ${diff.key}">${diff.emoji}</div>
             <div class="logro-info">
-              <div class="logro-titulo">${l.ach_title}</div>
+              <div class="logro-titulo">${escapeHtml(l.ach_title)}</div>
               <div class="logro-meta">
-                <span class="logro-desc">${l.ach_desc}</span>
+                <span class="logro-desc">${escapeHtml(l.ach_desc || "")}</span>
                 <span class="diff-label ${diff.key}">${diff.label}</span>
               </div>
             </div>

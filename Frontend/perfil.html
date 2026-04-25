@@ -165,7 +165,7 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, signOut } from "./auth.js";
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
 
     let originalData = {};
 
@@ -182,7 +182,7 @@
     async function loadProfile() {
       try {
         // GET /api/users/me — UserResponse: { usr_id, name, u_degree, semester, email }
-        const res = await fetch(`${API_BASE}/api/users/me`, { headers: await authHeaders() });
+        const res = await fetchWithAuth(`${API_BASE}/api/users/me`, { headers: await authHeaders() });
         if (!res.ok) throw new Error();
         const data = await res.json();
         fillForm(data);
@@ -217,7 +217,7 @@
       try {
         // PUT /api/users/me?full_name=... — actualiza nombre
         // Nota: cuando Martín agregue carrera/semestre al modelo, se extiende aquí
-        const res = await fetch(
+        const res = await fetchWithAuth(
           `${API_BASE}/api/users/me?full_name=${encodeURIComponent(nombre)}`,
           { method: "PUT", headers: await authHeaders() }
         );

@@ -128,7 +128,7 @@
   </main>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, signOut } from "./auth.js";
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
 
     requireAuth(async () => {
       await Promise.all([loadMyRank(), loadTopRanking()]);
@@ -136,11 +136,11 @@
 
     async function loadMyRank() {
       try {
-        const res = await fetch(`${API_BASE}/api/ranking/me`, { headers: await authHeaders() });
+        const res = await fetchWithAuth(`${API_BASE}/api/ranking/me`, { headers: await authHeaders() });
         if (!res.ok) throw new Error();
         const { data } = await res.json();
         document.getElementById("myRank").textContent   = `#${data.rank}`;
-        document.getElementById("myPoints").textContent = `${data.points.toLocaleString()} pts`;
+        document.getElementById("myPoints").textContent = `${(data.points ?? 0).toLocaleString()} pts`;
       } catch {
         document.getElementById("myRank").textContent = "—";
       }
