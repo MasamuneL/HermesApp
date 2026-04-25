@@ -165,7 +165,7 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth, getToken } from "./auth.js";
 
     let originalData = {};
 
@@ -193,11 +193,18 @@
     }
 
     function fillForm(data) {
-      document.getElementById("fieldNombre").value      = data.name        || "";
+      document.getElementById("fieldNombre").value      = data.full_name   || "";
       document.getElementById("fieldCarrera").value     = data.u_degree    || "";
       document.getElementById("fieldSemestre").value    = data.semester    || "";
-      // universidad y fecha_nacimiento — pendiente que Martín los agregue al modelo
-      updateNameDisplay(data.name);
+      document.getElementById("fieldUniversidad").value = data.universidad || "";
+      if (data.birth_date) {
+        const [anio, mes, dia] = data.birth_date.split("-");
+        document.getElementById("fieldDia").value  = parseInt(dia,  10);
+        document.getElementById("fieldMes").value  = parseInt(mes,  10);
+        document.getElementById("fieldAnio").value = parseInt(anio, 10);
+      }
+      if (data.photo_url) setPhoto(`${API_BASE}${data.photo_url}`);
+      updateNameDisplay(data.full_name);
     }
 
     function updateNameDisplay(nombre) {
@@ -209,20 +216,40 @@
     }
 
     window.saveProfile = async function() {
-      const nombre   = document.getElementById("fieldNombre").value.trim();
+      const nombre = document.getElementById("fieldNombre").value.trim();
       if (!nombre) { showToast("El nombre no puede estar vacío", true); return; }
 
       document.getElementById("btnGuardar").disabled = true;
 
       try {
-        // PUT /api/users/me?full_name=... — actualiza nombre
-        // Nota: cuando Martín agregue carrera/semestre al modelo, se extiende aquí
+        const params = new URLSearchParams();
+        params.set("full_name", nombre);
+
+        const carrera = document.getElementById("fieldCarrera").value.trim();
+        if (carrera) params.set("u_degree", carrera);
+
+        const semestre = document.getElementById("fieldSemestre").value;
+        if (semestre) params.set("semester", semestre);
+
+        const uni = document.getElementById("fieldUniversidad").value.trim();
+        if (uni) params.set("universidad", uni);
+
+        const dia  = document.getElementById("fieldDia").value;
+        const mes  = document.getElementById("fieldMes").value;
+        const anio = document.getElementById("fieldAnio").value;
+        if (dia && mes && anio) {
+          const mm = String(mes).padStart(2, "0");
+          const dd = String(dia).padStart(2, "0");
+          params.set("birth_date", `${anio}-${mm}-${dd}`);
+        }
+
         const res = await fetchWithAuth(
-          `${API_BASE}/api/users/me?full_name=${encodeURIComponent(nombre)}`,
+          `${API_BASE}/api/users/me?${params.toString()}`,
           { method: "PUT", headers: await authHeaders() }
         );
         if (!res.ok) throw new Error();
-        originalData.name = nombre;
+        const updated = await res.json();
+        originalData = { ...updated };
         showToast("✓ Perfil actualizado correctamente");
       } catch {
         showToast("Error al guardar el perfil", true);
@@ -236,18 +263,34 @@
       showToast("Cambios descartados");
     };
 
-    window.handlePhotoChange = function(event) {
+    window.handlePhotoChange = async function(event) {
       const file = event.target.files[0];
       if (!file) return;
+
+      // Preview inmediato
       const reader = new FileReader();
-      reader.onload = e => {
-        setPhoto(e.target.result);
-        // TODO: POST /api/users/foto cuando Martín lo implemente
-        // const formData = new FormData();
-        // formData.append("foto", file);
-        // fetch(`${API_BASE}/api/users/foto`, { method:"POST", headers: await authHeaders({}) sin Content-Type, body: formData });
-      };
+      reader.onload = e => setPhoto(e.target.result);
       reader.readAsDataURL(file);
+
+      // Subir al backend (sin Content-Type para que el browser ponga el boundary)
+      try {
+        const formData = new FormData();
+        formData.append("foto", file);
+        const res = await fetchWithAuth(`${API_BASE}/api/users/foto`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${getToken()}` },
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || "Error");
+        }
+        const updated = await res.json();
+        originalData = { ...updated };
+        showToast("✓ Foto actualizada");
+      } catch (e) {
+        showToast(e.message || "Error al subir la foto", true);
+      }
     };
 
     function setPhoto(src) {
