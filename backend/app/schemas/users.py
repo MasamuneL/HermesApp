@@ -1,12 +1,13 @@
 from pydantic import BaseModel, ConfigDict
-from uuid import UUID
+from typing import Optional
 
 
 class UserResponse(BaseModel):
-    usr_id: UUID
-    name: str
-    u_degree: str
-    semester: int
+    id: str
     email: str
+    full_name: Optional[str] = None
+    u_degree: Optional[str] = None
+    semester: Optional[int] = None
+    is_active: bool = True
 
     model_config = ConfigDict(from_attributes=True)
