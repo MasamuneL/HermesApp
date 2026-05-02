@@ -1,155 +1,163 @@
+# Hermes App — Organizador Académico con IA
 
-# 🕊️ HermesApp: Tu Organizador Académico con IA
+Hermes es una aplicación web para estudiantes universitarios. Combina un calendario inteligente con Google Calendar, un chatbot con Gemini Flash y gamificación con ranking en tiempo real.
 
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-05998b)](https://fastapi.tiangolo.com/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-0.0.20-orange)](https://langchain-ai.github.io/langgraph/)
+## Flujo principal
 
-Hermes es una aplicación web orientada a estudiantes. Su objetivo principal es resolver el problema de la organización del tiempo, transformando horarios físicos en calendarios digitales inteligentes y motivando el estudio mediante gamificación.
-
-## 🚀 Flujo Principal
-1. **Captura:** El usuario toma una foto de su horario escolar en papel a través de la web app.
-2. **Procesamiento:** La Inteligencia Artificial (Gemini 3.0 Flash) lee la foto y extrae las clases, horas y días.
-3. **Sincronización:** El sistema analiza la información y la inserta en un calendario digital, sugiriendo bloques de estudio.
-4. **Motivación:** Para mantener al usuario motivado, la aplicación cuenta con un sistema de puntos y un ranking en tiempo real para competir con amigos.
+1. **Login** — El usuario entra con su cuenta Google (Google Identity Services).
+2. **Calendario** — Sus eventos de Google Calendar se sincronizan automáticamente.
+3. **Chat con Gemini** — Le habla a Hermes en lenguaje natural: "¿qué tengo mañana?", "crea una clase de Cálculo el lunes a las 9".
+4. **Motivación** — El sistema asigna puntos por actividad y muestra un ranking en tiempo real.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Stack tecnológico
 
-### **1. Frontend (El Frente)**
-Es lo que el usuario ve y toca en su pantalla.
-* **Lenguajes:** HTML5, CSS3 y JavaScript puro (Vanilla JS) para construir las pantallas sin dependencias pesadas.
-* **Estilos:** **Tailwind CSS** para que la aplicación se vea bien en celulares y computadoras rápidamente.
-* **Cámara:** **WebRTC API**, la tecnología nativa del navegador para capturar la foto del horario.
-* **Componentes:** **FullCalendar**, una librería prefabricada que dibuja un calendario interactivo.
-
-### **2. Backend (El Motor)**
-Es el cerebro en el servidor que procesa los datos.
-* **Lenguaje:** **Python 3.11+**.
-* **Framework:** **FastAPI** para crear endpoints rápidos y seguros.
-* **Orquestador de IA:** **LangGraph**, que gestiona el flujo de la conversación y decide cuándo activar herramientas (como agendar en el calendario) basándose en lo que la IA interpreta.
-
-### **3. Bases de Datos (Almacenamiento)**
-* **PostgreSQL 16:** Base de datos relacional altamente segura para guardar usuarios, amigos y eventos del calendario.
-* **Redis 7:** Base de datos de "memoria rápida" para la tabla de clasificación (ranking), evitando que PostgreSQL colapse por consultas masivas.
-
-### **4. Inteligencia Artificial**
-* **Google Gemini API (3.0 Flash):** Encargada de ver la foto, leer el texto (VLM), y funcionar como el cerebro del chat inteligente mediante "Tool Calling".
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | HTML5 + CSS + JavaScript (sin framework) |
+| Backend | Python 3.12 + FastAPI (async) |
+| Auth | Google OAuth 2.0 via Google Identity Services (GIS) |
+| IA | Google Gemini Flash + LangGraph (chat + function calling) |
+| Calendario | Google Calendar API |
+| Base de datos | PostgreSQL 15 (SQLAlchemy 2.0 async + asyncpg) |
+| Cache / Ranking | Redis 7 (sorted sets para leaderboard) |
+| Deployment | Docker Compose (Dennis / Oscar) |
 
 ---
 
-## 📂 Estructura del Proyecto
+## Estructura del proyecto
 
-```text
-backend/
-├── app/
-│   ├── main.py                # Punto de entrada de FastAPI
-│   ├── api/                   # Rutas web (auth, calendar, users)
-│   ├── database/              # Modelos de SQLAlchemy y migraciones (Alembic)
-│   └── services/              # LÓGICA DEL ORQUESTADOR (IA)
-│       ├── llm_orchestrator.py # Coordinador principal de LangGraph
-│       ├── gemini_agent.py    # Nodo de razonamiento IA (Agente único para MVP)
-│       ├── action_tools.py    # Herramientas (Google Calendar / Pushbullet)
-│       └── schemas/           # Modelos Pydantic (Estado del Grafo)
-├── docker-compose.yml         # Contenedores para Postgres y Redis
-└── .env.example               # Plantilla de variables de entorno y secretos
-
+```
+HermesApp/
+├── backend/
+│   └── app/
+│       ├── main.py                  # Entry point FastAPI
+│       ├── dependencies/
+│       │   └── auth.py              # Verificación de token Google OAuth
+│       ├── database/                # Modelos SQLAlchemy + CRUDs
+│       │   ├── postgres.py          # Conexión async a PostgreSQL
+│       │   ├── user.py              # Modelo User
+│       │   ├── ranking.py           # Modelo Ranking
+│       │   ├── crud_users.py        # CRUD de usuarios
+│       │   └── redis_operations.py  # Cache, sesiones y ranking en Redis
+│       ├── schemas/                 # Modelos Pydantic (contrato frontend ↔ backend)
+│       │   ├── users.py
+│       │   ├── ranking.py
+│       │   ├── chat.py
+│       │   └── achievements.py
+│       ├── routers/                 # Endpoints de la API
+│       │   ├── users.py             # /api/users
+│       │   ├── calendar.py          # /api/calendar
+│       │   ├── chat.py              # /api/chat
+│       │   ├── ranking.py           # /api/ranking
+│       │   └── logros.py            # /api/logros
+│       ├── services/                # Lógica de IA
+│       │   ├── gemini_agent.py      # Conexión con Gemini API
+│       │   ├── llm_orchestrator.py  # LangGraph: clasifica intención y ejecuta acción
+│       │   └── action_tools.py      # Funciones que Gemini puede invocar
+│       └── HermesAgent/
+│           └── hermes_app.py        # Prototipo de escritorio de Víctor (referencia)
+├── Frontend/
+│   ├── login.html                   # Login con Google
+│   ├── main.html                    # Dashboard principal
+│   ├── calendario.html              # Calendario + chat con Gemini
+│   ├── perfil.html
+│   ├── ranking.html
+│   ├── logros.html
+│   └── auth.js                      # Módulo de autenticación (GIS)
+├── docker-compose.yml               # PostgreSQL + Redis + backend
+├── backend/Dockerfile
+├── .env.example                     # Plantilla de variables de entorno
+├── .gitignore
+├── CLAUDE.md                        # Decisiones de arquitectura (para Claude Code)
+└── AVANCES.md                       # Estado del proyecto y pendientes
 ```
 
 ---
 
-## ⚙️ Configuración del Entorno (Para Desarrolladores)
+## Configuración local
 
-### **Programas Necesarios**
+### Requisitos
+- Docker Desktop
+- Python 3.12+ (solo si corres el backend fuera de Docker)
+- Chrome o Edge (para voice input con SpeechRecognition API)
 
-Antes de escribir código, instala en tu computadora:
+### Pasos
 
-1. Python (Versión 3.11 o superior).
-2. Docker Desktop.
-3. Git.
-
-### **Pasos para Iniciar**
-
-1. **Clonar el repositorio y configurar variables:**
+**1. Clonar y pararse en la rama de desarrollo**
 ```bash
-git clone [https://github.com/tu-usuario/HermesApp.git](https://github.com/tu-usuario/HermesApp.git)
+git clone https://github.com/MasamuneL/HermesApp.git
 cd HermesApp
-cp backend/.env.example backend/.env  # Edita el .env con tus contraseñas y API Keys
-
+git checkout feature/google-oauth
 ```
 
-
-2. **Encender las bases de datos vacías (Docker):**
+**2. Configurar variables de entorno**
 ```bash
-docker-compose up -d postgres redis
-
+cp .env.example .env
 ```
+Edita `.env` y llena:
+- `GEMINI_API_KEY` — obtenla en [Google AI Studio](https://aistudio.google.com/app/apikey)
+- `GOOGLE_CLIENT_ID` — ya está en el `.env.example` (el del proyecto)
 
-
-3. **Crear las tablas en la base de datos (Alembic):**
+**3. Levantar servicios con Docker**
 ```bash
-alembic upgrade head
-
+docker-compose up --build
 ```
+Esto levanta PostgreSQL, Redis y el backend FastAPI en `http://localhost:8000`.
 
-
-4. **Instalar dependencias y encender el motor principal:**
+**4. Aplicar el schema de base de datos (primera vez)**
 ```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-
+docker exec -i hermes_postgres psql -U hermes_user -d hermes < backend/database/schema.sql
 ```
 
+**5. Abrir el frontend**
 
-*Nota: Este proyecto utiliza LangChain 0.1.0 y Pydantic 2.5.3 para asegurar compatibilidad con el orquestador.*
+Abre `Frontend/login.html` directamente en Chrome o sirve la carpeta con Live Server (VS Code).
+
+La documentación interactiva de la API estará en: `http://localhost:8000/docs`
+
+### Requisito de Google Cloud Console
+
+El OAuth Client ID necesita `http://localhost` en **Authorized JavaScript origins**. Si ves error de origen no autorizado, agrégalo en:
+> Google Cloud Console → APIs & Services → Credentials → tu OAuth 2.0 Client ID → Authorized JavaScript origins
 
 ---
 
-## 🗺️ Pasos de Desarrollo (Hoja de Ruta del MVP)
+## Endpoints principales
 
-Para no abrumarnos, construiremos la aplicación en 6 fases ordenadas. **No se debe avanzar a la siguiente fase sin terminar la anterior.**
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/api/users/register` | Registra o devuelve el usuario autenticado |
+| `GET`  | `/api/users/me` | Perfil del usuario |
+| `GET`  | `/api/calendar/events` | Lista eventos de Google Calendar |
+| `POST` | `/api/calendar/events` | Crea un evento en Google Calendar |
+| `POST` | `/api/chat/` | Envía mensaje a Gemini (con historial) |
+| `GET`  | `/api/ranking/top` | Top N del leaderboard (público) |
+| `GET`  | `/api/ranking/me` | Posición y puntos del usuario |
+| `GET`  | `/api/logros/me` | Logros del usuario |
 
-### **FASE 1: Preparación y Almacenamiento (La Base)**
-
-* Crear la estructura de carpetas y el archivo de configuraciones secretas (`.env`).
-* Traducir el mapa de la base de datos a código Python (modelos de PostgreSQL).
-
-### **FASE 2: El Motor Principal y la Seguridad**
-
-* Sistema de ingreso seguro (Autenticación OAuth2/JWT).
-* Crear funciones básicas de usuarios (solicitudes de amistad).
-* Crear funciones CRUD del calendario.
-
-### **FASE 3: Orquestador de Inteligencia Artificial (LangGraph)**
-
-* Diseñar el prompt del sistema para Gemini 3.0 Flash.
-* Crear la ruta de escaneo de imágenes.
-* Implementar el Orquestador con LangGraph para que la IA pueda insertar eventos directamente en la base de datos.
-
-### **FASE 4: Interfaz Visual (Frontend Vanilla)**
-
-* Navegación fluida (SPA) entre chat, calendario y ranking.
-* Módulo de Cámara WebRTC en JavaScript.
-* Conectar visualmente FullCalendar con la base de datos.
-
-### **FASE 5: Competencia y Tareas Automáticas**
-
-* Asignación de puntos en la base de datos por acciones realizadas.
-* Configurar el trabajador invisible (Scheduler) para actualizar el ranking en Redis cada 5 minutos.
-* Alertas automáticas de superación en el ranking.
-
-### **FASE 6: Pruebas y Lanzamiento**
-
-* Empaquetar el proyecto completo en Docker.
-* Pruebas generales de usuario (Simulacro).
-* Despliegue en la nube.
+Todos los endpoints protegidos requieren `Authorization: Bearer <google_access_token>`.
 
 ---
 
-## 🤝 Reglas para Trabajar en Equipo
+## Equipo
 
-1. **Ramas (Branches):** Nunca trabajar sobre el archivo principal (`main`). Siempre crea una rama aislada explicando qué se está haciendo (ej. `feature/camara-de-fotos` o `fix/error-login`).
-2. **Revisiones (PRs):** Una vez terminado el trabajo en la rama, pide a un compañero que revise el código mediante un Pull Request antes de mezclarlo.
-3. **Dependencias:** No actualizar versiones de librerías de IA sin consultarlo con el equipo, ya que puede romper el orquestador.
+| Integrante | Rol |
+|-----------|-----|
+| Víctor (Ferrokanon) | Backend + prototipo Gemini |
+| Oswaldo | Frontend (HTML, CSS, JS) |
+| Alan (MasamuneL) | APIs, schemas, auth, project management |
+| Ángel | Bases de datos (schema SQL) |
+| Dennis | Deployment (Docker) |
+| Oscar | CI/CD |
+| Álvaro | Comodín |
+| Martin | DB: tabla achievements + campos User |
 
+---
+
+## Reglas del equipo
+
+1. **Nunca trabajar directamente en `main`** — siempre crear una rama descriptiva.
+2. **Pull Request antes de mergear** — un compañero debe revisar.
+3. **No subir `.env`** al repo bajo ninguna circunstancia.

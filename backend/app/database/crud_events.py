@@ -5,7 +5,7 @@ Funciones para crear, leer, actualizar y borrar eventos
 """
 from sqlalchemy import select, update, delete, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.event import CalendarEvent
+from app.database.event import CalendarEvent
 from datetime import datetime, timedelta
 from typing import Optional, List
 import uuid

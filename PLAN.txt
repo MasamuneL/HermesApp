@@ -1,0 +1,172 @@
+========================================================
+  PLAN DE ENTREGA — HERMES APP
+  Fecha límite: Lunes 23 de marzo de 2026
+  Fecha de creación: Jueves 19 de marzo de 2026
+  Días disponibles: 4
+========================================================
+
+--------------------------------------------------------
+OPINION SOBRE EL ESTADO DEL REPO (sé honesto contigo)
+--------------------------------------------------------
+El repo NO está listo todavía. Está más organizado que antes,
+pero hay problemas que bloquean la integración:
+
+  PROBLEMA 1 — Branches sin mergear a main ✓ RESUELTO (20 mar)
+    Todo el trabajo está fragmentado en ramas separadas que
+    nunca se han unido. main está prácticamente vacío.
+    Ramas pendientes de mergear (en orden):
+      - angel/database-models  → modelos de DB          ✓
+      - Schemas                → schemas Pydantic + routers ✓
+      - Hermes_AppV0.0.2       → prototipo Gemini de Víctor ✓
+      - oswaldo/frontend       → frontend de Oswaldo    ✓
+      - oscar_ci/cd            → CI/CD (pendiente aún)
+
+  PROBLEMA 2 — README.md desactualizado ✓ RESUELTO (20 mar)
+    Menciona LangGraph (ya no se usa), Gemini 3.0 Flash
+    (es 2.0 Flash), estructura de carpetas incorrecta,
+    y una URL de git clone con corchetes mal puesta.
+
+  PROBLEMA 3 — No existe .env.example ✓ RESUELTO (20 mar)
+    Cada integrante del equipo no sabe qué variables de
+    entorno necesita configurar (DB, Redis, Firebase, Gemini).
+
+  PROBLEMA 4 — No existe docker-compose.yml (pendiente Dennis)
+    Fue borrado en un commit anterior. Sin él, nadie puede
+    levantar PostgreSQL y Redis localmente de forma fácil.
+
+  PROBLEMA 5 — Firebase Admin SDK no inicializado ✓ RESUELTO (20 mar)
+    Los routers ya verifican tokens de Firebase, pero
+    firebase_admin.initialize_app() no está llamado en
+    ningún lado todavía.
+
+  PROBLEMA 6 — Frontend solo tiene mockups (imágenes JPEG/PNG) ✓ RESUELTO (20 mar)
+    El trabajo real de Oswaldo está en su branch sin mergear.
+
+  LO QUE SÍ ESTÁ BIEN:
+    - Modelos SQLAlchemy (User, CalendarEvent, Ranking)
+    - CRUDs completos (crud_users, crud_events, redis_operations)
+    - Schemas Pydantic (users, ranking, chat, logros)
+    - Routers FastAPI (users, ranking, chat, logros)
+    - main.py con routers registrados y CORS
+    - CLAUDE.md con decisiones de arquitectura documentadas
+
+--------------------------------------------------------
+PLAN DÍA A DÍA
+--------------------------------------------------------
+
+JUEVES 19 MARZO — Arreglar el repo (Alan + todos)
+--------------------------------------------------
+  [✓] Alan mergea las branches en este orden a main:
+        1. angel/database-models
+        2. Schemas (contiene routers + main.py)
+        3. Hermes_AppV0.0.2 (prototipo Gemini de Víctor)
+        4. oswaldo/frontend
+        (oscar_ci/cd pendiente aún)
+
+  [✓] Alan crea .env.example en la raíz del repo con estas variables:
+        DATABASE_URL, REDIS_URL, GEMINI_API_KEY, FIREBASE_CREDENTIALS_PATH
+
+  [ ] Dennis/Oscar restauran docker-compose.yml con:
+        - Servicio PostgreSQL 16
+        - Servicio Redis 7
+        - Volúmenes persistentes
+
+  [✓] Actualizar README.md con la estructura real del proyecto
+      (corregir versión de Gemini 3.0 → 2.5 Flash, typos, pasos de instalación).
+
+
+VIERNES 20 MARZO — Firebase + Gemini (Víctor + Alan)
+-----------------------------------------------------
+  [✓] Firebase Admin SDK ya inicializado en main.py (resuelto con merge de Schemas)
+        - firebase_admin.initialize_app() en main.py ✓
+        - firebase-credentials.json en .gitignore ✓
+
+  [ ] Víctor implementa llm_orchestrator.py con Gemini 2.5 Flash:
+        - Recibe mensaje del usuario + user_id
+        - Llama a Gemini con function calling
+        - Retorna {"response": "...", "intent": "..."}
+        - El router de chat ya tiene el TODO con exactamente esto
+
+  [ ] Víctor implementa gemini_agent.py y action_tools.py
+      (las funciones que Gemini puede ejecutar via function calling)
+
+  [✓] Alan configura Google Calendar API:
+        - Endpoint GET /api/calendar/events (leer eventos) ✓
+        - Endpoint POST /api/calendar/events (crear evento desde OCR) ✓
+        - Frontend debe enviar X-Google-Token con el Google access token de Firebase
+
+
+SÁBADO 21 MARZO — Frontend conectado al backend (Oswaldo + Álvaro)
+-------------------------------------------------------------------
+  [ ] Oswaldo conecta la pantalla de login con Firebase Auth
+      (Google OAuth + email/password)
+
+  [ ] Oswaldo llama a POST /api/users/register después del primer login
+
+  [ ] Oswaldo conecta pantalla de ranking con GET /api/ranking/top
+
+  [ ] Oswaldo conecta pantalla de chat con POST /api/chat/
+
+  [ ] Oswaldo conecta Google Calendar en la pantalla de calendario
+
+  [ ] Álvaro apoya a Oswaldo en lo que se atrase
+
+
+DOMINGO 22 MARZO — Pruebas de integración + archivo de avances
+---------------------------------------------------------------
+  [ ] Todo el equipo prueba el flujo completo:
+        1. Registro/Login con Firebase
+        2. Ver perfil en /api/users/me
+        3. Mandar mensaje al chat y recibir respuesta de Gemini
+        4. Ver ranking en /api/ranking/top
+        5. Ver calendario desde Google Calendar API
+
+  [ ] Corregir bugs encontrados durante las pruebas
+
+  [ ] Martin entrega:
+        - Tabla de achievements en la DB
+        - Campos carrera + semestre en el modelo User
+        (Si no alcanza el tiempo, logros queda en 501 para la entrega)
+
+  [ ] Alan crea AVANCES.md en la raíz del repo documentando:
+        - Qué funciona
+        - Qué quedó pendiente y por qué
+        - Cómo correr el proyecto localmente
+        - Capturas de pantalla o ejemplos de respuestas de la API
+
+
+LUNES 23 MARZO — Revisión final
+--------------------------------
+  [ ] Verificar que la rama main esté actualizada con todo
+  [ ] Probar que docker-compose up levanta todo sin errores
+  [ ] Revisar que /docs de FastAPI muestre todos los endpoints
+  [ ] Entrega
+
+--------------------------------------------------------
+RESPONSABLES RESUMIDOS
+--------------------------------------------------------
+  Alan (tú)   → Mergear branches, .env.example, Google Calendar API,
+                AVANCES.md, coordinación general
+  Víctor      → Firebase Admin SDK, Gemini / llm_orchestrator.py
+  Oswaldo     → Conectar frontend con todos los endpoints
+  Ángel       → Apoyar con DB si surge algo, Google Calendar API
+  Dennis      → docker-compose.yml restaurado
+  Oscar       → CI/CD listo en la rama oscar_ci/cd
+  Álvaro      → Apoyo a Oswaldo en frontend
+  Martin      → Tabla achievements + campos User (si alcanza el tiempo)
+
+--------------------------------------------------------
+PRIORIDAD SI EL TIEMPO NO ALCANZA
+--------------------------------------------------------
+  MUST (sin esto no hay entrega):
+    - Login con Firebase funcionando
+    - GET /api/users/me respondiendo
+    - Chat con Gemini respondiendo
+    - Ranking visible en frontend
+
+  NICE TO HAVE (si alcanza):
+    - Google Calendar integrado
+    - Logros funcionando (tabla de Martin)
+    - CI/CD de Dennis y Oscar activo
+
+========================================================

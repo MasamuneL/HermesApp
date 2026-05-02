@@ -1,0 +1,48 @@
+# Variables de entorno — contienen contraseñas y API keys
+.env
+
+# Credenciales de Firebase — nunca subir al repo
+firebase-credentials.json
+backend/app/credentials.json
+
+# Google Calendar OAuth — se generan automáticamente al autenticar
+token.json
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Tests y cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Bases de datos locales (SQLite del prototipo HermesAgent)
+*.sqlite
+*.db
+
+# Logs
+*.log
+
+# Node (por si el frontend usa npm en el futuro)
+node_modules/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Fotos de perfil subidas por usuarios (generadas en runtime)
+backend/static/fotos/

@@ -3,6 +3,18 @@ cd "C:\Users\User\Desktop\AgenteHermesAPP"
 
 cd "C:\Users\User\Desktop\HERMES_1\Actual(ActualizarAPI)\AgenteHermesAPP"
 
+
+Usar este en la carpeta "Gemini"  cd "C:\Users\User\Desktop\HERMES_App(Gemini)"
+Instalar: 
+pip install sounddevice numpy scipy python-dotenv google-generativeai
+pip install gtts sounddevice numpy scipy python-dotenv google-generativeai pygame
+pip install gtts pygame sounddevice numpy scipy python-dotenv google-generativeai
+pip install tk sounddevice scipy gtts pygame SQLAlchemy google-generativeai python-dotenv
+
+
+cd "C:\Users\User\Desktop\AgenteHermesAPP"
+
+
 python3 hermes_app.py
 python hermes_app.py
 

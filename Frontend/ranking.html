@@ -1,252 +1,82 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HERMES — Ranking</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-
   <style>
     :root {
-      --gold: #c9a84c;
-      --gold-light: #f0d080;
-      --gold-dim: rgba(201,168,76,0.3);
-      --dark: #0a0a0c;
-      --text: #1a1408;
-      --muted: #9a8a6a;
-      --surface: #f9f7f3;
-      --border: #e8dcc8;
+      --gold:#c9a84c; --gold-light:#f0d080; --gold-dim:rgba(201,168,76,0.3);
+      --dark:#0a0a0c; --text:#1a1408; --muted:#9a8a6a; --surface:#f9f7f3; --border:#e8dcc8;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #ffffff;
-      color: var(--text);
-      font-family: 'Outfit', sans-serif;
-      min-height: 100vh;
-    }
-
-    /* ── HEADER ── */
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:#fff; color:var(--text); font-family:'Outfit',sans-serif; min-height:100vh; }
     header {
-      background: #fff;
-      border-bottom: 1px solid var(--border);
-      padding: 14px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      animation: fadeDown 0.5s ease forwards;
+      background:#fff; border-bottom:1px solid var(--border); padding:14px 32px;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:100;
     }
     .menu-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 16px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-family: 'Outfit', sans-serif;
-      font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
-      cursor: pointer; border-radius: 2px; transition: all 0.2s;
+      display:flex; align-items:center; gap:8px; padding:8px 16px; background:transparent;
+      border:1px solid var(--border); color:var(--muted); font-family:'Outfit',sans-serif;
+      font-size:12px; letter-spacing:0.15em; text-transform:uppercase;
+      cursor:pointer; border-radius:2px; transition:all 0.2s;
     }
-    .menu-btn:hover { border-color: var(--gold); color: var(--gold); }
-
-    .logo-area {
-      display: flex; align-items: center; gap: 12px;
-      cursor: pointer; transition: opacity 0.2s; text-decoration: none;
-    }
-    .logo-area:hover { opacity: 0.75; }
-    .logo-img {
-      width: 42px; height: 42px; border-radius: 50%;
-      background: var(--withe); border: 1px solid var(--gold-dim);
-      overflow: hidden; display: flex; align-items: center; justify-content: center;
-    }
-    .logo-img img { width: 100%; height: 100%; object-fit: cover; }
-    .logo-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.4rem; font-weight: 700; letter-spacing: 0.2em; color: var(--text);
-    }
-    .avatar-btn {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: var(--withe); border: 2px solid var(--gold-dim);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: border-color 0.2s;
-    }
-    .avatar-btn:hover { border-color: var(--gold-light); }
-
-    /* Dropdown */
-    .dropdown {
-      display: none; position: absolute; top: 72px; left: 32px;
-      background: #fff; border: 1px solid var(--border);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.08); min-width: 200px; z-index: 200;
-    }
-    .dropdown.open { display: block; }
-    .dropdown a {
-      display: block; padding: 12px 20px;
-      font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--text); text-decoration: none;
-      border-bottom: 1px solid var(--border); transition: background 0.15s, color 0.15s;
-    }
-    .dropdown a:last-child { border-bottom: none; }
-    .dropdown a:hover { background: var(--surface); color: var(--gold); }
-
-    /* ── NAV BAR ── */
-    .nav-bar {
-      padding: 12px 32px; background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      display: flex; gap: 12px;
-      animation: fadeDown 0.5s 0.05s ease forwards; opacity: 0;
-    }
-    .nav-link {
-      padding: 9px 20px; font-size: 12px; font-weight: 500;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--muted); background: transparent;
-      border: 1px solid transparent; border-radius: 2px;
-      cursor: pointer; text-decoration: none; transition: all 0.2s;
-    }
-    .nav-link:hover, .nav-link.active {
-      color: var(--gold); border-color: var(--gold-dim);
-      background: rgba(201,168,76,0.05);
-    }
-
-    /* ── MAIN ── */
-    main {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 48px 32px;
-    }
-
-    /* Page title */
-    .page-header {
-      text-align: center;
-      margin-bottom: 56px;
-      animation: fadeUp 0.5s 0.1s ease forwards; opacity: 0;
-    }
-    .page-label {
-      font-size: 11px; letter-spacing: 0.35em;
-      text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
-    }
-    .page-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.4rem; font-weight: 600; letter-spacing: 0.1em; color: var(--text);
-    }
-
-    /* ── PODIUM ── */
-    .podium-section {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 20px;
-      margin-bottom: 48px;
-      animation: fadeUp 0.5s 0.15s ease forwards; opacity: 0;
-    }
-
-    .podium-item {
-      display: flex; flex-direction: column; align-items: center; gap: 12px;
-      flex: 1; max-width: 200px;
-    }
-
-    /* Avatar circle */
-    .podium-avatar {
-      border-radius: 50%;
-      background: var(--white);
-      display: flex; align-items: center; justify-content: center;
-      border: 2px solid var(--gold);
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.2rem; font-weight: 600; color: var(--gold-light);
-    }
-    .podium-item:nth-child(2) .podium-avatar { /* 1st place - center */
-      width: 72px; height: 72px; border-color: var(--gold-light); font-size: 1.5rem;
-      box-shadow: 0 4px 20px rgba(201,168,76,0.3);
-    }
-    .podium-item:nth-child(1) .podium-avatar,  /* 3rd */
-    .podium-item:nth-child(3) .podium-avatar { /* 2nd */
-      width: 56px; height: 56px;
-    }
-
-    .podium-name {
-      font-size: 13px; font-weight: 500; color: var(--text);
-      text-align: center; letter-spacing: 0.05em;
-    }
-    .podium-score {
-      font-size: 12px; color: var(--gold); font-weight: 600;
-      letter-spacing: 0.1em;
-    }
-
-    /* Podium bars */
-    .podium-bar {
-      width: 100%;
-      display: flex; align-items: flex-end; justify-content: center;
-      padding: 12px 0 0;
-      border-top: 2px solid var(--gold-dim);
-      position: relative;
-    }
-    .podium-item:nth-child(2) .podium-bar { /* 1st - tallest */
-      height: 100px; background: linear-gradient(to bottom, rgba(201,168,76,0.15), rgba(201,168,76,0.04));
-      border-top-color: var(--gold);
-    }
-    .podium-item:nth-child(3) .podium-bar { /* 2nd */
-      height: 72px; background: rgba(201,168,76,0.07);
-    }
-    .podium-item:nth-child(1) .podium-bar { /* 3rd */
-      height: 50px; background: rgba(201,168,76,0.04);
-    }
-
-    .podium-rank {
-      position: absolute; top: -14px;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.1rem; font-weight: 700;
-    }
-    .podium-item:nth-child(2) .podium-rank { color: var(--gold); font-size: 1.3rem; }
-    .podium-item:nth-child(3) .podium-rank { color: #a0a0a0; }
-    .podium-item:nth-child(1) .podium-rank { color: #cd7f32; }
-
-    /* ── LIST (4th, 5th) ── */
-    .list-section {
-      border: 1px solid var(--border);
-      border-top: 2px solid var(--gold);
-      animation: fadeUp 0.5s 0.25s ease forwards; opacity: 0;
-    }
-    .list-header {
-      padding: 14px 24px;
-      border-bottom: 1px solid var(--border);
-      font-size: 11px; letter-spacing: 0.25em;
-      text-transform: uppercase; color: var(--gold); font-weight: 600;
-    }
-    .list-row {
-      display: grid; grid-template-columns: 48px 1fr auto;
-      align-items: center; padding: 18px 24px;
-      border-bottom: 1px solid var(--surface);
-      transition: background 0.15s; gap: 16px;
-    }
-    .list-row:last-child { border-bottom: none; }
-    .list-row:hover { background: var(--surface); }
-    .list-rank {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.3rem; font-weight: 700; color: var(--muted);
-    }
-    .list-name { font-size: 14px; color: var(--text); font-weight: 500; }
-    .list-score {
-      font-size: 13px; font-weight: 600; color: var(--gold);
-      letter-spacing: 0.05em;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .menu-btn:hover { border-color:var(--gold); color:var(--gold); }
+    .logo-area { display:flex; align-items:center; gap:12px; cursor:pointer; transition:opacity 0.2s; text-decoration:none; }
+    .logo-area:hover { opacity:0.75; }
+    .logo-img { width:42px; height:42px; border-radius:50%; background:var(--white); border:1px solid var(--gold-dim); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .logo-img img { width:100%; height:100%; object-fit:cover; }
+    .logo-name { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; letter-spacing:0.2em; color:var(--text); }
+    .avatar-btn { width:40px; height:40px; border-radius:50%; background:var(--white); border:2px solid var(--gold-dim); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color 0.2s; }
+    .avatar-btn:hover { border-color:var(--gold); }
+    .dropdown { display:none; position:absolute; top:72px; left:32px; background:#fff; border:1px solid var(--border); box-shadow:0 8px 32px rgba(0,0,0,0.08); min-width:200px; z-index:200; }
+    .dropdown.open { display:block; }
+    .dropdown a { display:block; padding:12px 20px; font-size:12px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text); text-decoration:none; border-bottom:1px solid var(--border); transition:background 0.15s, color 0.15s; }
+    .dropdown a:last-child { border-bottom:none; }
+    .dropdown a:hover { background:var(--surface); color:var(--gold); }
+    .nav-bar { padding:12px 32px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; gap:12px; }
+    .nav-link { padding:9px 20px; font-size:12px; font-weight:500; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); background:transparent; border:1px solid transparent; border-radius:2px; cursor:pointer; text-decoration:none; transition:all 0.2s; }
+    .nav-link:hover, .nav-link.active { color:var(--gold); border-color:var(--gold-dim); background:rgba(201,168,76,0.05); }
+    main { max-width:860px; margin:0 auto; padding:48px 32px; }
+    .page-header { text-align:center; margin-bottom:56px; animation:fadeUp 0.5s 0.1s ease forwards; opacity:0; }
+    .page-label { font-size:11px; letter-spacing:0.35em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+    .page-title { font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:600; letter-spacing:0.1em; color:var(--text); }
+    .my-rank-card { border:1px solid var(--gold-dim); border-top:2px solid var(--gold); padding:16px 24px; margin-bottom:40px; display:flex; align-items:center; justify-content:space-between; animation:fadeUp 0.5s 0.12s ease forwards; opacity:0; }
+    .my-rank-label { font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+    .my-rank-value { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:700; color:var(--gold); }
+    .podium-section { display:flex; align-items:flex-end; justify-content:center; gap:20px; margin-bottom:48px; animation:fadeUp 0.5s 0.15s ease forwards; opacity:0; }
+    .podium-item { display:flex; flex-direction:column; align-items:center; gap:12px; flex:1; max-width:200px; }
+    .podium-avatar { border-radius:50%; background:var(--white); display:flex; align-items:center; justify-content:center; border:2px solid var(--gold-dim); font-family:'Cormorant Garamond',serif; font-weight:600; color:var(--gold-light); }
+    .podium-item:nth-child(2) .podium-avatar { width:72px; height:72px; border-color:var(--gold); font-size:1.5rem; box-shadow:0 4px 20px rgba(201,168,76,0.3); }
+    .podium-item:nth-child(1) .podium-avatar, .podium-item:nth-child(3) .podium-avatar { width:56px; height:56px; font-size:1.2rem; }
+    .podium-name { font-size:13px; font-weight:500; color:var(--text); text-align:center; }
+    .podium-score { font-size:12px; color:var(--gold); font-weight:600; }
+    .podium-bar { width:100%; display:flex; align-items:flex-end; justify-content:center; padding:12px 0 0; border-top:2px solid var(--gold-dim); position:relative; }
+    .podium-item:nth-child(2) .podium-bar { height:100px; background:linear-gradient(to bottom, rgba(201,168,76,0.15), rgba(201,168,76,0.04)); border-top-color:var(--gold); }
+    .podium-item:nth-child(3) .podium-bar { height:72px; background:rgba(201,168,76,0.07); }
+    .podium-item:nth-child(1) .podium-bar { height:50px; background:rgba(201,168,76,0.04); }
+    .podium-rank { position:absolute; top:-14px; font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:700; }
+    .podium-item:nth-child(2) .podium-rank { color:var(--gold); font-size:1.3rem; }
+    .podium-item:nth-child(3) .podium-rank { color:#a0a0a0; }
+    .podium-item:nth-child(1) .podium-rank { color:#cd7f32; }
+    .list-section { border:1px solid var(--border); border-top:2px solid var(--gold); animation:fadeUp 0.5s 0.25s ease forwards; opacity:0; }
+    .list-header { padding:14px 24px; border-bottom:1px solid var(--border); font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--gold); font-weight:600; }
+    .list-row { display:grid; grid-template-columns:48px 1fr auto; align-items:center; padding:18px 24px; border-bottom:1px solid var(--surface); transition:background 0.15s; gap:16px; }
+    .list-row:last-child { border-bottom:none; }
+    .list-row:hover { background:var(--surface); }
+    .list-rank { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:700; color:var(--muted); }
+    .list-name { font-size:14px; color:var(--text); font-weight:500; }
+    .list-score { font-size:13px; font-weight:600; color:var(--gold); }
+    .empty-state { padding:40px; text-align:center; color:var(--muted); font-size:13px; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
   </style>
 </head>
 <body>
-
-  <!-- HEADER -->
   <header>
     <button class="menu-btn" onclick="toggleMenu()">☰ Menú</button>
-
     <a href="main.html" class="logo-area" style="text-decoration:none;">
       <div class="logo-img">
         <img src="LogoHermes.png" alt="H"
@@ -254,99 +84,135 @@
       </div>
       <span class="logo-name">HERMES</span>
     </a>
-
     <div class="avatar-btn" onclick="window.location.href='perfil.html'">
-      <span style="color:#f0d080;font-size:16px;">👤</span>
+      <span style="color:#c9a84c;font-size:16px;">👤</span>
     </div>
-
     <div class="dropdown" id="mainMenu">
       <a href="main.html">🏠 Inicio</a>
       <a href="perfil.html">👤 Perfil</a>
       <a href="ranking.html">🏆 Ranking</a>
       <a href="calendario.html">📅 Calendario</a>
       <a href="logros.html">⭐ Logros</a>
-      <a href="login.html" style="color:#c0392b;">↩ Cerrar Sesión</a>
+      <a href="#" onclick="handleLogout()">↩ Cerrar Sesión</a>
     </div>
   </header>
-
-  <!-- NAV BAR -->
   <div class="nav-bar">
-    <a class="nav-link" href="ranking.html">🏆 Ranking</a>
-    <a class="nav-link" href="calendario.html">📅 Calendario y Chat</a>
+    <a class="nav-link active" href="calendario.html">📅 Calendario y Chat</a>
     <a class="nav-link" href="logros.html">⭐ Logros</a>
   </div>
-
-  <!-- MAIN -->
   <main>
-
     <div class="page-header">
       <p class="page-label">Tabla de posiciones</p>
       <h1 class="page-title">Ranking</h1>
     </div>
-
-    <div class="podium-section" id="podiumSection"></div>
-
+    <!-- Mi posición -->
+    <div class="my-rank-card">
+      <div>
+        <p class="my-rank-label">Mi posición</p>
+        <p class="my-rank-value" id="myRank">Cargando...</p>
+      </div>
+      <div style="text-align:right;">
+        <p class="my-rank-label">Mis puntos</p>
+        <p class="my-rank-value" id="myPoints">—</p>
+      </div>
+    </div>
+    <!-- Podio top 3 -->
+    <div class="podium-section" id="podiumSection">
+      <div class="empty-state">Cargando ranking...</div>
+    </div>
+    <!-- Lista 4-10 -->
     <div class="list-section">
-      <div class="list-header">Posiciones 4 — 5</div>
+      <div class="list-header">Posiciones 4 — 10</div>
       <div id="listSection"></div>
     </div>
-
   </main>
 
-  <script>
-    const ranking = [
-      { rank: 1, name: "Alejandro M.", score: 4820, initials: "AM" },
-      { rank: 2, name: "Sofía R.",     score: 4310, initials: "SR" },
-      { rank: 3, name: "Carlos V.",    score: 3950, initials: "CV" },
-      { rank: 4, name: "Daniela P.",   score: 3600, initials: "DP" },
-      { rank: 5, name: "Miguel T.",    score: 3210, initials: "MT" },
-    ];
+  <script type="module">
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
 
-    function renderPodium() {
-      const top3 = [ranking[2], ranking[0], ranking[1]]; // order: 3rd, 1st, 2nd
-      const podium = document.getElementById("podiumSection");
-      podium.innerHTML = top3.map(p => `
-        <div class="podium-item">
-          <div class="podium-avatar">${p.initials}</div>
-          <div class="podium-name">${p.name}</div>
-          <div class="podium-score">${p.score.toLocaleString()} pts</div>
-          <div class="podium-bar">
-            <span class="podium-rank">${p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : '🥉'}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderList() {
-      const rest = ranking.slice(3);
-      const list = document.getElementById("listSection");
-      list.innerHTML = rest.map(p => `
-        <div class="list-row">
-          <span class="list-rank">${p.rank}</span>
-          <span class="list-name">${p.name}</span>
-          <span class="list-score">${p.score.toLocaleString()} pts</span>
-        </div>
-      `).join('');
-    }
-
-    function toggleMenu() {
-      document.getElementById("mainMenu").classList.toggle("open");
-    }
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown")) {
-        document.getElementById("mainMenu").classList.remove("open");
-      }
+    requireAuth(async () => {
+      await Promise.all([loadMyRank(), loadTopRanking()]);
     });
 
-    // import { getFirestore, collection, getDocs, orderBy, query, limit } from "firebase/firestore";
-    // const db = getFirestore(app);
-    // const q = query(collection(db, "usuarios"), orderBy("puntos", "desc"), limit(5));
-    // const snapshot = await getDocs(q);
-    // const ranking = snapshot.docs.map((doc, i) => ({ rank: i+1, ...doc.data() }));
+    async function loadMyRank() {
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/api/ranking/me`, { headers: await authHeaders() });
+        if (!res.ok) throw new Error();
+        const { data } = await res.json();
+        document.getElementById("myRank").textContent   = `#${data.rank}`;
+        document.getElementById("myPoints").textContent = `${(data.points ?? 0).toLocaleString()} pts`;
+      } catch {
+        document.getElementById("myRank").textContent = "—";
+      }
+    }
 
-    renderPodium();
-    renderList();
+    async function loadTopRanking() {
+      try {
+        // GET /api/ranking/top — no requiere auth
+        const res = await fetchWithAuth(`${API_BASE}/api/ranking/top?limit=10`);
+        if (!res.ok) throw new Error();
+        const { data } = await res.json();
+        // data = [ { user_id, points, name? }, ... ] ordenado por puntos desc
+        renderPodium(data.slice(0, 3));
+        renderList(data.slice(3));
+      } catch {
+        document.getElementById("podiumSection").innerHTML =
+          `<div class="empty-state">No se pudo cargar el ranking</div>`;
+      }
+    }
+
+    function getInitials(name) {
+      if (!name) return "?";
+      const parts = name.trim().split(" ");
+      return parts.length >= 2
+        ? (parts[0][0] + parts[1][0]).toUpperCase()
+        : parts[0][0].toUpperCase();
+    }
+
+    function renderPodium(top3) {
+      if (top3.length < 3) {
+        document.getElementById("podiumSection").innerHTML =
+          `<div class="empty-state">Aún no hay suficientes usuarios en el ranking</div>`;
+        return;
+      }
+      // Orden visual: 3°, 1°, 2°
+      const order  = [top3[2], top3[0], top3[1]];
+      const medals = ["🥉", "🥇", "🥈"];
+      const ranks  = [3, 1, 2];
+
+      document.getElementById("podiumSection").innerHTML = order.map((p, i) => `
+        <div class="podium-item">
+          <div class="podium-avatar">${getInitials(p.name)}</div>
+          <div class="podium-name">${p.name || "Usuario"}</div>
+          <div class="podium-score">${p.points.toLocaleString()} pts</div>
+          <div class="podium-bar">
+            <span class="podium-rank">${medals[i]}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderList(rest) {
+      if (rest.length === 0) {
+        document.getElementById("listSection").innerHTML =
+          `<div class="empty-state">Sin más posiciones</div>`;
+        return;
+      }
+      document.getElementById("listSection").innerHTML = rest.map((p, i) => `
+        <div class="list-row">
+          <span class="list-rank">${i + 4}</span>
+          <span class="list-name">${p.name || "Usuario"}</span>
+          <span class="list-score">${p.points.toLocaleString()} pts</span>
+        </div>
+      `).join("");
+    }
+
+    window.handleLogout = async () => { signOut(); window.location.href = "login.html"; };
+    window.toggleMenu   = () => document.getElementById("mainMenu").classList.toggle("open");
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown"))
+        document.getElementById("mainMenu").classList.remove("open");
+    });
   </script>
-
 </body>
 </html>

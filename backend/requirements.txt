@@ -1,0 +1,27 @@
+# Base de datos (TU MÓDULO)
+sqlalchemy
+asyncpg
+alembic
+redis
+python-dotenv
+pydantic
+
+# Backend FastAPI (PARA EL MVP)
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Google APIs — Calendar + Auth
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+
+# Gemini + LangChain/LangGraph (PARA EL CHAT Y AGENTE)
+google-generativeai
+langchain-google-genai
+langchain-core
+langgraph
+
+# HTTP async (verificación de tokens OAuth)
+httpx

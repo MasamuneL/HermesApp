@@ -1,412 +1,214 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HERMES — Calendario</title>
-
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- FullCalendar -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/es.global.min.js"></script>
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-
   <style>
-    :root {
-      --gold: #c9a84c;
-      --gold-light: #f0d080;
-      --gold-dim: rgba(201,168,76,0.3);
-      --dark: #0a0a0c;
-      --text: #1a1408;
-      --muted: #9a8a6a;
-      --surface: #f9f7f3;
-      --border: #e8dcc8;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #fff;
-      color: var(--text);
-      font-family: 'Outfit', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── HEADER ── */
-    header {
-      background: #fff;
-      border-bottom: 1px solid var(--border);
-      padding: 14px 32px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }
-    .menu-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 16px; background: transparent;
-      border: 1px solid var(--border); color: var(--muted);
-      font-family: 'Outfit', sans-serif; font-size: 12px;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      cursor: pointer; border-radius: 2px; transition: all 0.2s;
-    }
-    .menu-btn:hover { border-color: var(--gold); color: var(--gold); }
-    .logo-area {
-      display: flex; align-items: center; gap: 12px;
-      cursor: pointer; transition: opacity 0.2s; text-decoration: none;
-    }
-    .logo-area:hover { opacity: 0.75; }
-    .logo-img {
-      width: 42px; height: 42px; border-radius: 50%;
-      background: var(--withe); border: 1px solid var(--gold-dim);
-      overflow: hidden; display: flex; align-items: center; justify-content: center;
-    }
-    .logo-img img { width: 100%; height: 100%; object-fit: cover; }
-    .logo-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.4rem; font-weight: 700; letter-spacing: 0.2em; color: var(--text);
-    }
-    .avatar-btn {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: var(--withe); border: 2px solid var(--gold-dim);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: border-color 0.2s;
-    }
-    .avatar-btn:hover { border-color: var(--gold); }
-    .dropdown {
-      display: none; position: absolute; top: 72px; left: 32px;
-      background: #fff; border: 1px solid var(--border);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.08); min-width: 200px; z-index: 200;
-    }
-    .dropdown.open { display: block; }
-    .dropdown a {
-      display: block; padding: 12px 20px; font-size: 12px;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--text); text-decoration: none;
-      border-bottom: 1px solid var(--border); transition: background 0.15s, color 0.15s;
-    }
-    .dropdown a:last-child { border-bottom: none; }
-    .dropdown a:hover { background: var(--surface); color: var(--gold); }
-
-    /* ── NAV BAR ── */
-    .nav-bar {
-      padding: 12px 32px; background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      display: flex; gap: 12px;
-    }
-    .nav-link {
-      padding: 9px 20px; font-size: 12px; font-weight: 500;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: var(--muted); background: transparent;
-      border: 1px solid transparent; border-radius: 2px;
-      cursor: pointer; text-decoration: none; transition: all 0.2s;
-    }
-    .nav-link:hover, .nav-link.active {
-      color: var(--gold); border-color: var(--gold-dim);
-      background: rgba(201,168,76,0.05);
-    }
-
-    /* ── FULLCALENDAR WRAPPER ── */
-    main {
-      flex: 1;
-      padding: 32px;
-      max-width: 1000px;
-      margin: 0 auto;
-      width: 100%;
-      transition: margin-right 0.3s ease, max-width 0.3s ease;
-    }
-    main.chat-open {
-      margin-right: 400px;
-    }
-
-    /* FullCalendar custom theme */
-    .fc {
-      font-family: 'Outfit', sans-serif !important;
-    }
-    .fc-toolbar-title {
-      font-family: 'Cormorant Garamond', serif !important;
-      font-size: 1.6rem !important;
-      font-weight: 600 !important;
-      letter-spacing: 0.08em !important;
-      color: var(--text) !important;
-    }
-    .fc-button {
-      background: transparent !important;
-      border: 1px solid var(--border) !important;
-      color: var(--muted) !important;
-      font-family: 'Outfit', sans-serif !important;
-      font-size: 12px !important;
-      letter-spacing: 0.1em !important;
-      text-transform: uppercase !important;
-      border-radius: 2px !important;
-      padding: 6px 14px !important;
-      box-shadow: none !important;
-      transition: all 0.2s !important;
-    }
-    .fc-button:hover, .fc-button-active {
-      background: var(--withe) !important;
-      border-color: var(--gold-light) !important;
-      color: var(--gold-light) !important;
-    }
-    .fc-button-primary:not(:disabled):active {
-      background: var(--gold-light) !important;
-      border-color: var(--gold-light) !important;
-    }
-    .fc-col-header-cell {
-      background: var(--surface) !important;
-      border-color: var(--border) !important;
-    }
-    .fc-col-header-cell-cushion {
-      font-size: 11px !important;
-      letter-spacing: 0.15em !important;
-      text-transform: uppercase !important;
-      color: var(--muted) !important;
-      text-decoration: none !important;
-      padding: 10px 0 !important;
-    }
-    .fc-daygrid-day {
-      border-color: var(--border) !important;
-      transition: background 0.15s !important;
-    }
-    .fc-daygrid-day:hover {
-      background: var(--surface) !important;
-    }
-    .fc-daygrid-day-number {
-      font-size: 13px !important;
-      color: var(--text) !important;
-      text-decoration: none !important;
-      padding: 6px 8px !important;
-    }
-    .fc-day-today {
-      background: rgba(201,168,76,0.06) !important;
-    }
-    .fc-day-today .fc-daygrid-day-number {
-      background: var(--gold-light) !important;
-      color: var(--withe) !important;
-      border-radius: 50% !important;
-      width: 28px; height: 28px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    /* Events */
-    .fc-event {
-      background: var(--gold-dim) !important;
-      border: 1px solid var(--gold) !important;
-      border-radius: 2px !important;
-      font-size: 11px !important;
-      font-family: 'Outfit', sans-serif !important;
-      padding: 2px 6px !important;
-      cursor: pointer !important;
-    }
-    .fc-event-title { color: var(--gold) !important; }
-    .fc-event-time  { color: var(--gold) !important; font-weight: 600 !important; }
-    .fc-scrollgrid { border-color: var(--border) !important; }
-    .fc-scrollgrid td, .fc-scrollgrid th { border-color: var(--border) !important; }
-
-    /* ── EVENT DETAIL MODAL ── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.3);
-      z-index: 400;
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-top: 3px solid var(--gold);
-      width: 360px;
-      padding: 28px;
-      transform: translateY(10px);
-      transition: transform 0.2s;
-      border-radius: 2px;
-    }
-    .modal-overlay.open .modal { transform: translateY(0); }
-    .modal-label {
-      font-size: 10px; letter-spacing: 0.3em;
-      text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
-    }
-    .modal-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.4rem; font-weight: 600; color: var(--text);
-      margin-bottom: 16px;
-    }
-    .modal-detail {
-      display: flex; align-items: flex-start; gap: 10px;
-      font-size: 13px; color: var(--muted); margin-bottom: 10px;
-    }
-    .modal-detail span:first-child { font-size: 15px; }
-    .modal-close {
-      margin-top: 20px; width: 100%;
-      padding: 10px; background: var(--gold-dim); color: var(--gold-light);
-      border: none; font-family: 'Outfit', sans-serif;
-      font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
-      cursor: pointer; border-radius: 2px; transition: background 0.2s;
-    }
-    .modal-close:hover { background: #2d2410; }
-
-    /* ── FLOATING CHAT BUTTON ── */
-    .chat-fab {
-      position: fixed; bottom: 32px; right: 32px;
-      width: 56px; height: 56px; border-radius: 50%;
-      background: var(--gold-dim); border: 2px solid var(--gold);
-      box-shadow: 0 4px 24px rgba(201,168,76,0.3);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 300; transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .chat-fab:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 32px rgba(201,168,76,0.45);
-    }
-    .chat-fab svg { width: 24px; height: 24px; fill: var(--gold); }
-
-    /* ── CHAT WINDOW ── */
-    .chat-window {
-      position: fixed; bottom: 104px; right: 32px;
-      width: 360px; height: 500px;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-top: 2px solid var(--gold);
-      box-shadow: 0 16px 60px rgba(0,0,0,0.15);
-      display: flex; flex-direction: column;
-      z-index: 299; border-radius: 4px;
-      opacity: 0; transform: translateY(16px) scale(0.97);
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
-    }
-    .chat-window.open {
-      opacity: 1; transform: translateY(0) scale(1); pointer-events: all;
-    }
-    .chat-win-header {
-      padding: 14px 18px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .chat-win-title { display: flex; align-items: center; gap: 8px; }
-    .bot-dot-live {
-      width: 8px; height: 8px; border-radius: 50%; background: #27ae60;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%,100% { box-shadow: 0 0 0 2px rgba(39,174,96,0.2); }
-      50%      { box-shadow: 0 0 0 5px rgba(39,174,96,0.1); }
-    }
-    .chat-win-name {
-      font-size: 12px; font-weight: 600;
-      letter-spacing: 0.15em; text-transform: uppercase; color: var(--text);
-    }
-    .chat-win-close {
-      width: 28px; height: 28px; border: none; background: transparent;
-      cursor: pointer; color: var(--muted); font-size: 18px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 2px; transition: background 0.15s;
-    }
-    .chat-win-close:hover { background: var(--surface); }
-
-    .chat-messages {
-      flex: 1; overflow-y: auto; padding: 16px;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    .chat-messages::-webkit-scrollbar { width: 4px; }
-    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    .msg {
-      max-width: 88%; padding: 10px 13px;
-      font-size: 13px; line-height: 1.5;
-      animation: fadeUp 0.25s ease forwards;
-    }
-    .msg.bot {
-      align-self: flex-start;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 2px 10px 10px 10px; color: var(--text);
-    }
-    .msg.user {
-      align-self: flex-end;
-      background: var(--gold-dim); color: var(--gold-light);
-      border-radius: 10px 2px 10px 10px;
-    }
-    .msg .msg-time { font-size: 10px; color: var(--muted); margin-top: 4px; }
-    .msg.user .msg-time { color: rgba(240,208,128,0.5); text-align: right; }
-
-    .event-card-msg {
-      background: #fff; border: 1px solid var(--gold-dim);
-      border-left: 3px solid var(--gold);
-      border-radius: 4px; padding: 10px 14px;
-      margin-top: 8px; font-size: 12px;
-    }
-    .event-card-msg .ec-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
-    .event-card-msg .ec-detail { color: var(--muted); margin-bottom: 2px; }
-    .ec-actions { display: flex; gap: 8px; margin-top: 10px; }
-    .ec-btn {
-      padding: 5px 14px; font-size: 11px; font-weight: 600;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      border-radius: 2px; cursor: pointer; transition: all 0.2s; border: 1px solid;
-    }
-    .ec-btn-confirm { background: var(--gold-dim); color: var(--gold-light); border-color: var(--gold-light); }
-    .ec-btn-confirm:hover { background: #2d2410; }
-    .ec-btn-cancel { background: transparent; color: var(--muted); border-color: var(--border); }
-    .ec-btn-cancel:hover { border-color: var(--muted); }
-
-    .typing {
-      align-self: flex-start; display: flex; gap: 4px;
-      padding: 12px 14px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 2px 10px 10px 10px;
-    }
-    .typing span {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--muted); animation: bounce 1s infinite;
-    }
-    .typing span:nth-child(2) { animation-delay: 0.15s; }
-    .typing span:nth-child(3) { animation-delay: 0.3s; }
-    @keyframes bounce {
-      0%,60%,100% { transform: translateY(0); }
-      30% { transform: translateY(-5px); }
-    }
-
-    .msg-error {
-      align-self: center; background: #fde8e8;
-      border: 1px solid #f5c6c6; color: #c0392b;
-      font-size: 12px; padding: 8px 14px; border-radius: 4px; text-align: center;
-    }
-
-    .chat-input-area {
-      padding: 12px 14px; border-top: 1px solid var(--border);
-      display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0;
-    }
-    .chat-input {
-      flex: 1; padding: 9px 12px;
-      border: 1px solid var(--border); border-radius: 2px;
-      font-family: 'Outfit', sans-serif; font-size: 13px;
-      color: var(--text); background: var(--surface);
-      resize: none; outline: none; transition: border-color 0.2s;
-      max-height: 90px; line-height: 1.4;
-    }
-    .chat-input:focus { border-color: var(--gold); }
-    .chat-input::placeholder { color: var(--muted); }
-    .send-btn {
-      width: 38px; height: 38px;
-      background: var(--gold-dim); border: none; border-radius: 2px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s; flex-shrink: 0;
-    }
-    .send-btn:hover { background: #2d2410; }
-    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .send-btn svg { width: 15px; height: 15px; fill: var(--gold); }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    :root { --gold:#c9a84c; 
+      --gold-light:#f0d080; 
+      --gold-dim:rgba(201,168,76,0.3); 
+      --dark:#0a0a0c; 
+      --text:#1a1408; 
+      --muted:#9a8a6a; 
+      --surface:#f9f7f3; 
+      --border:#e8dcc8; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:#fff; 
+      color:var(--text); 
+      font-family:'Outfit',sans-serif; 
+      min-height:100vh; 
+      display:flex; 
+      flex-direction:column; }
+    header { background:#fff; 
+      border-bottom:1px solid var(--border); 
+      padding:14px 32px; display:flex; 
+      align-items:center; 
+      justify-content:space-between; 
+      position:sticky; top:0; 
+      z-index:100; }
+    .menu-btn { display:flex; 
+      align-items:center; 
+      gap:8px; 
+      padding:8px 16px; 
+      background:transparent; 
+      border:1px solid var(--border); 
+      color:var(--muted); 
+      font-family:'Outfit',sans-serif; 
+      font-size:12px; 
+      letter-spacing:0.15em; 
+      text-transform:uppercase; 
+      cursor:pointer; 
+      border-radius:2px; 
+      transition:all 0.2s; }
+    .menu-btn:hover { border-color:var(--gold); 
+      color:var(--gold); }
+    .logo-area { display:flex; 
+      align-items:center; 
+      gap:12px; 
+      cursor:pointer; 
+      transition:opacity 0.2s; 
+      text-decoration:none; }
+    .logo-area:hover { opacity:0.75; }
+    .logo-img { width:42px; 
+      height:42px; border-radius:50%; 
+      background:var(--white); 
+      border:1px solid var(--gold-dim); 
+      overflow:hidden; 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; }
+    .logo-img img { width:100%; 
+      height:100%; 
+      object-fit:cover; }
+    .logo-name { font-family:'Cormorant Garamond',serif; 
+    font-size:1.4rem; 
+    font-weight:700; 
+    letter-spacing:0.2em; 
+    color:var(--text); }
+    .avatar-btn { width:40px; 
+      height:40px; 
+      border-radius:50%; 
+      background:var(--white); 
+      border:2px solid var(--gold-dim); 
+      cursor:pointer; 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      transition:border-color 0.2s; }
+    .avatar-btn:hover { border-color:var(--gold); }
+    .dropdown { display:none; 
+      position:absolute; 
+      top:72px; left:32px; 
+      background:#fff; 
+      border:1px solid var(--border); 
+      box-shadow:0 8px 32px rgba(0,0,0,0.08); 
+      min-width:200px; 
+      z-index:200; }
+    .dropdown.open { display:block; }
+    .dropdown a { display:block; 
+      padding:12px 20px; 
+      font-size:12px; 
+      letter-spacing:0.15em; 
+      text-transform:uppercase; 
+      color:var(--text); 
+      text-decoration:none; 
+      border-bottom:1px solid var(--border); 
+      transition:background 0.15s, color 0.15s; }
+    .dropdown a:last-child { border-bottom:none; }
+    .dropdown a:hover { background:var(--surface); color:var(--gold); }
+    .nav-bar { padding:12px 32px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; gap:12px; }
+    .nav-link { padding:9px 20px; font-size:12px; font-weight:500; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); background:transparent; border:1px solid transparent; border-radius:2px; cursor:pointer; text-decoration:none; transition:all 0.2s; }
+    .nav-link:hover, .nav-link.active { color:var(--gold); border-color:var(--gold-dim); background:rgba(201,168,76,0.05); }
+    main { flex:1; padding:32px; max-width:1000px; margin:0 auto; width:100%; transition:margin-right 0.3s ease; }
+    main.chat-open { margin-right:400px; }
+    /* FullCalendar theme */
+    .fc { font-family:'Outfit',sans-serif !important; }
+    .fc-toolbar-title { font-family:'Cormorant Garamond',serif !important; font-size:1.6rem !important; font-weight:600 !important; letter-spacing:0.08em !important; color:var(--text) !important; }
+    .fc-button { background:transparent !important; border:1px solid var(--border) !important; color:var(--muted) !important; font-family:'Outfit',sans-serif !important; font-size:12px !important; letter-spacing:0.1em !important; text-transform:uppercase !important; border-radius:2px !important; padding:6px 14px !important; box-shadow:none !important; transition:all 0.2s !important; }
+    .fc-button:hover, .fc-button-active { background:var(--white) !important; border-color:var(--gold-light) !important; color:var(--gold-light) !important; }
+    .fc-button-primary:not(:disabled):active { background:var(--white) !important; border-color:var(--gold-light) !important; }
+    .fc-col-header-cell { background:var(--surface) !important; border-color:var(--border) !important; }
+    .fc-col-header-cell-cushion { font-size:11px !important; letter-spacing:0.15em !important; text-transform:uppercase !important; color:var(--muted) !important; text-decoration:none !important; padding:10px 0 !important; }
+    .fc-daygrid-day { border-color:var(--border) !important; transition:background 0.15s !important; }
+    .fc-daygrid-day:hover { background:var(--surface) !important; }
+    .fc-daygrid-day-number { font-size:13px !important; color:var(--text) !important; text-decoration:none !important; padding:6px 8px !important; }
+    .fc-day-today { background:rgba(201,168,76,0.06) !important; }
+    .fc-day-today .fc-daygrid-day-number { background:var(--white) !important; color:var(--gold-light) !important; border-radius:50% !important; width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
+    .fc-event { background:var(--white) !important; border:1px solid var(--gold-dim) !important; border-radius:2px !important; font-size:11px !important; font-family:'Outfit',sans-serif !important; padding:2px 6px !important; cursor:pointer !important; }
+    .fc-event-title { color:var(--gold-light) !important; }
+    .fc-event-time  { color:var(--gold) !important; font-weight:600 !important; }
+    .fc-scrollgrid { border-color:var(--border) !important; }
+    .fc-scrollgrid td, .fc-scrollgrid th { border-color:var(--border) !important; }
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:400; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal { background:#fff; border:1px solid var(--border); border-top:3px solid var(--gold); width:360px; padding:28px; transform:translateY(10px); transition:transform 0.2s; border-radius:2px; }
+    .modal-overlay.open .modal { transform:translateY(0); }
+    .modal-label { font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+    .modal-title { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:600; color:var(--text); margin-bottom:16px; }
+    .modal-detail { display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--muted); margin-bottom:10px; }
+    .modal-close { margin-top:20px; width:100%; padding:10px; background:var(--white); color:var(--gold-light); border:none; font-family:'Outfit',sans-serif; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; border-radius:2px; transition:background 0.2s; }
+    .modal-close:hover { background:#2d2410; }
+    /* Chat fab */
+    .chat-fab { position:fixed; bottom:32px; right:32px; width:56px; height:56px; border-radius:50%; background:var(--white); border:2px solid var(--gold); box-shadow:0 4px 24px rgba(201,168,76,0.3); cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:300; transition:transform 0.2s, box-shadow 0.2s; }
+    .chat-fab:hover { transform:scale(1.08); box-shadow:0 6px 32px rgba(201,168,76,0.45); }
+    .chat-fab svg { width:24px; height:24px; fill:var(--gold); }
+    /* Chat window */
+    .chat-window { position:fixed; bottom:104px; right:32px; width:360px; height:500px; background:#fff; border:1px solid var(--border); border-top:2px solid var(--gold); box-shadow:0 16px 60px rgba(0,0,0,0.15); display:flex; flex-direction:column; z-index:299; border-radius:4px; opacity:0; transform:translateY(16px) scale(0.97); pointer-events:none; transition:opacity 0.25s ease, transform 0.25s ease; }
+    .chat-window.open { opacity:1; transform:translateY(0) scale(1); pointer-events:all; }
+    .chat-win-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .chat-win-title { display:flex; align-items:center; gap:8px; }
+    .bot-dot-live { width:8px; height:8px; border-radius:50%; background:#27ae60; animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { box-shadow:0 0 0 2px rgba(39,174,96,0.2); } 50% { box-shadow:0 0 0 5px rgba(39,174,96,0.1); } }
+    .chat-win-name { font-size:12px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:var(--text); }
+    .chat-win-close { width:28px; height:28px; border:none; background:transparent; cursor:pointer; color:var(--muted); font-size:18px; display:flex; align-items:center; justify-content:center; border-radius:2px; transition:background 0.15s; }
+    .chat-win-close:hover { background:var(--surface); }
+    .chat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+    .chat-messages::-webkit-scrollbar { width:4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+    .msg { max-width:88%; padding:10px 13px; font-size:13px; line-height:1.5; animation:fadeUp 0.25s ease forwards; }
+    .msg.bot { align-self:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:2px 10px 10px 10px; color:var(--text); }
+    .msg.user { align-self:flex-end; background:var(--white); color:var(--gold-light); border-radius:10px 2px 10px 10px; }
+    .msg .msg-time { font-size:10px; color:var(--muted); margin-top:4px; }
+    .msg.user .msg-time { color:rgba(240,208,128,0.5); text-align:right; }
+    .event-card-msg { background:#fff; border:1px solid var(--gold-dim); border-left:3px solid var(--gold); border-radius:4px; padding:10px 14px; margin-top:8px; font-size:12px; }
+    .event-card-msg .ec-title { font-weight:600; color:var(--text); margin-bottom:4px; }
+    .event-card-msg .ec-detail { color:var(--muted); margin-bottom:2px; }
+    .ec-actions { display:flex; gap:8px; margin-top:10px; }
+    .ec-btn { padding:5px 14px; font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; border-radius:2px; cursor:pointer; transition:all 0.2s; border:1px solid; }
+    .ec-btn-confirm { background:var(--white); color:var(--gold-light); border-color:var(--gold-light); }
+    .ec-btn-confirm:hover { background:#2d2410; }
+    .ec-btn-cancel { background:transparent; color:var(--muted); border-color:var(--border); }
+    .typing { align-self:flex-start; display:flex; gap:4px; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:2px 10px 10px 10px; }
+    .typing span { width:6px; height:6px; border-radius:50%; background:var(--muted); animation:bounce 1s infinite; }
+    .typing span:nth-child(2) { animation-delay:0.15s; }
+    .typing span:nth-child(3) { animation-delay:0.3s; }
+    @keyframes bounce { 0%,60%,100% { transform:translateY(0); } 30% { transform:translateY(-5px); } }
+    .msg-error { align-self:center; background:#fde8e8; border:1px solid #f5c6c6; color:#c0392b; font-size:12px; padding:8px 14px; border-radius:4px; text-align:center; }
+    .pending-notice { align-self:center; background:#fffbf0; border:1px solid #f0d080; color:#b87a00; font-size:12px; padding:8px 14px; border-radius:4px; text-align:center; }
+    .chat-input-area { padding:12px 14px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:flex-end; flex-shrink:0; }
+    .chat-input { flex:1; padding:9px 12px; border:1px solid var(--border); border-radius:2px; font-family:'Outfit',sans-serif; font-size:13px; color:var(--text); background:var(--surface); resize:none; outline:none; transition:border-color 0.2s; max-height:90px; line-height:1.4; }
+    .chat-input:focus { border-color:var(--gold); }
+    .chat-input::placeholder { color:var(--muted); }
+    .send-btn { width:38px; height:38px; background:var(--white); border:none; border-radius:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; flex-shrink:0; }
+    .send-btn:hover { background:#2d2410; }
+    .send-btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .send-btn svg { width:15px; height:15px; fill:var(--gold); }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    /* TTS toggle */
+    .tts-btn { background:none; border:none; cursor:pointer; font-size:15px; opacity:0.45; transition:opacity 0.2s; padding:4px; }
+    .tts-btn.active { opacity:1; color:var(--gold); }
+    /* Mic button */
+    .mic-btn { background:none; border:none; cursor:pointer; font-size:18px; padding:0 4px; opacity:0.45; transition:all 0.2s; flex-shrink:0; }
+    .mic-btn.listening { opacity:1; color:#e74c3c; animation:pulse 1s infinite; }
+    .mic-btn:disabled { opacity:0.2; cursor:not-allowed; }
+    .upload-btn { background:none; border:none; cursor:pointer; font-size:18px; padding:0 4px; opacity:0.45; transition:all 0.2s; flex-shrink:0; }
+    .upload-btn:hover { opacity:1; color:var(--gold); }
+    /* Schedule FAB */
+    .schedule-fab { position:fixed; bottom:100px; right:32px; width:48px; height:48px; border-radius:50%; background:#fff; border:1px solid var(--gold-dim); box-shadow:0 4px 16px rgba(201,168,76,0.15); font-size:20px; cursor:pointer; z-index:300; transition:transform 0.2s, box-shadow 0.2s; }
+    .schedule-fab:hover { transform:scale(1.08); box-shadow:0 6px 24px rgba(201,168,76,0.3); }
+    /* Schedule Panel */
+    #schedulePanel { position:fixed; left:-320px; top:0; width:300px; height:100vh; background:#fff; border-right:1px solid var(--border); z-index:250; transition:left 0.3s ease; overflow-y:auto; padding:20px 16px; box-shadow:4px 0 24px rgba(0,0,0,0.06); }
+    #schedulePanel.open { left:0; }
+    .sp-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .sp-header span { font-size:12px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--text); }
+    .sp-close { background:none; border:none; font-size:18px; cursor:pointer; color:var(--muted); }
+    .sp-day-label { font-size:10px; text-transform:uppercase; letter-spacing:0.2em; color:var(--gold); margin:14px 0 6px; }
+    .sp-event { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+    .sp-event-title { flex:1; color:var(--text); }
+    .sp-event-time { color:var(--muted); font-size:11px; white-space:nowrap; }
+    .sp-edit-btn { font-size:10px; padding:3px 8px; border:1px solid var(--gold-dim); background:none; color:var(--gold); cursor:pointer; border-radius:2px; white-space:nowrap; transition:all 0.15s; }
+    .sp-edit-btn:hover { background:var(--gold-dim); }
+    .sp-empty { color:var(--muted); font-size:13px; text-align:center; margin-top:40px; }
   </style>
 </head>
 <body>
- 
-  <!-- HEADER -->
   <header>
     <button class="menu-btn" onclick="toggleMenu()">☰ Menú</button>
     <a href="main.html" class="logo-area" style="text-decoration:none;">
@@ -425,23 +227,19 @@
       <a href="ranking.html">🏆 Ranking</a>
       <a href="calendario.html">📅 Calendario</a>
       <a href="logros.html">⭐ Logros</a>
-      <a href="login.html" style="color:#c0392b;">↩ Cerrar Sesión</a>
+      <a href="#" onclick="handleLogout()">↩ Cerrar Sesión</a>
     </div>
   </header>
- 
-  <!-- NAV BAR -->
   <div class="nav-bar">
     <a class="nav-link" href="ranking.html">🏆 Ranking</a>
     <a class="nav-link active" href="calendario.html">📅 Calendario y Chat</a>
     <a class="nav-link" href="logros.html">⭐ Logros</a>
   </div>
- 
-  <!-- CALENDAR -->
+
   <main id="calMain">
     <div id="calendar"></div>
   </main>
- 
-  <!-- EVENT DETAIL MODAL -->
+
   <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
     <div class="modal">
       <p class="modal-label">Evento</p>
@@ -449,263 +247,493 @@
       <div class="modal-detail"><span>🕐</span><span id="modalTime">—</span></div>
       <div class="modal-detail"><span>📅</span><span id="modalDate">—</span></div>
       <div class="modal-detail" id="modalDescRow"><span>📝</span><span id="modalDesc">—</span></div>
+      <div class="modal-detail" id="modalLocRow"><span>📍</span><span id="modalLoc">—</span></div>
       <button class="modal-close" onclick="closeModal()">Cerrar</button>
     </div>
   </div>
- 
-  <!-- FLOATING CHAT BUTTON -->
+
+  <button class="schedule-fab" onclick="toggleSchedulePanel()" title="Mi semana">📋</button>
+
+  <div id="schedulePanel">
+    <div class="sp-header">
+      <span>Mi Semana</span>
+      <button class="sp-close" onclick="toggleSchedulePanel()">×</button>
+    </div>
+    <div id="scheduleList"><p class="sp-empty">Cargando...</p></div>
+  </div>
+
   <button class="chat-fab" onclick="toggleChat()" title="Agendar con asistente">
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-    </svg>
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
   </button>
- 
-  <!-- CHAT WINDOW -->
+
   <div class="chat-window" id="chatWindow">
     <div class="chat-win-header">
       <div class="chat-win-title">
         <div class="bot-dot-live"></div>
         <span class="chat-win-name">Asistente HERMES</span>
       </div>
-      <button class="chat-win-close" onclick="toggleChat()">×</button>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button class="tts-btn" id="ttsToggle" onclick="toggleTTS()" title="Activar voz">🔇</button>
+        <button class="chat-win-close" onclick="toggleChat()">×</button>
+      </div>
     </div>
     <div class="chat-messages" id="chatMessages">
-      <div class="msg bot">
-        ¡Hola! Puedo agendar eventos por ti. Dime algo como:<br><br>
-        <em style="color:var(--muted)">"Agenda que tengo que recoger mi pasaporte el 20 de marzo a las 10am"</em>
+      <div class="msg bot" id="greetingMsg">
+        <span style="color:var(--muted)">Cargando...</span>
         <div class="msg-time">ahora</div>
       </div>
     </div>
     <div class="chat-input-area">
+      <button class="mic-btn" id="micBtn" onclick="toggleVoice()" title="Hablar">🎤</button>
+      <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="uploadImage(event)">
+      <button class="upload-btn" id="uploadBtn" style="display:none" onclick="document.getElementById('fileInput').click()" title="Subir horario de clases">📎</button>
       <textarea class="chat-input" id="chatInput" rows="1"
         placeholder="Dile al asistente qué agendar..."
-        onkeydown="handleKey(event)"
-        oninput="autoResize(this)"></textarea>
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
       <button class="send-btn" id="sendBtn" onclick="sendMessage()">
         <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
       </button>
     </div>
   </div>
- 
-  <script>
-    const API_BASE = "http://localhost:8000";
+
+  <script type="module">
+    import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
+
     const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
- 
     let calendar;
     let pendingEvento = null;
-    let chatOpen = false;
- 
-    // ── FULLCALENDAR ─────────────────────────────────────
-    document.addEventListener("DOMContentLoaded", () => {
+    let chatOpen      = false;
+    let currentHeaders = {};
+    let chatHistory       = [];
+    let ttsEnabled        = false;
+    let isListening       = false;
+    let schedulePanelOpen = false;
+    let recognition       = null;
+    let needsOnboarding   = false;
+    const SpeechRec       = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    requireAuth(async user => {
+      currentHeaders = await authHeaders();
+      initCalendar();
+      initVoice();
+      // Obtener saludo inicial desde el backend (onboarding o bienvenida de vuelta)
+      const FALLBACK_GREETING = "¡Hola! Puedo agendar eventos por ti. Dime algo como:\n\"Agenda que tengo que recoger mi pasaporte el 20 de marzo a las 10am\"";
+      const setGreeting = (text) => {
+        const greetEl = document.getElementById("greetingMsg");
+        if (greetEl) {
+          greetEl.innerHTML = escapeHtml(text).replace(/\n/g, "<br>") +
+            `<div class="msg-time">${new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}</div>`;
+        }
+        chatHistory.push({ role: "assistant", content: text });
+      };
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/api/chat/greeting`, { headers: await authHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          setGreeting(data.message);
+          if (data.needs_onboarding) {
+            needsOnboarding = true;
+            document.getElementById("uploadBtn").style.display = "";
+          }
+        } else {
+          setGreeting(FALLBACK_GREETING);
+        }
+      } catch (_) {
+        setGreeting(FALLBACK_GREETING);
+      }
+    });
+
+    function initCalendar() {
       calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
         locale: "es",
         initialView: "dayGridMonth",
-        headerToolbar: {
-          left:   "prev,next today",
-          center: "title",
-          right:  "dayGridMonth,timeGridWeek,listMonth"
+        headerToolbar: { left:"prev,next today", center:"title", right:"dayGridMonth,timeGridWeek,listMonth" },
+        buttonText: { today:"Hoy", month:"Mes", week:"Semana", list:"Lista" },
+        height: "auto", dayMaxEvents: 3, nowIndicator: true,
+        // Carga eventos desde Google Calendar via back
+        events: async (info, successCallback, failureCallback) => {
+          try {
+            const params = new URLSearchParams({
+              max_results: 50,
+              time_min: info.startStr,
+              time_max: info.endStr,
+            });
+            const res = await fetchWithAuth(`${API_BASE}/api/calendar/events?${params}`, {
+              headers: await authHeaders()
+            });
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            // CalendarEventResponse: { id, title, start, end, description, location }
+            successCallback(data.map(e => ({
+              id:    e.id,
+              title: e.title,
+              start: e.start,
+              end:   e.end,
+              extendedProps: { descripcion: e.description, location: e.location }
+            })));
+          } catch (err) {
+            console.error("[HERMES] Error cargando eventos de Calendar:", err);
+            failureCallback("No se pudieron cargar los eventos");
+          }
         },
-        buttonText: { today: "Hoy", month: "Mes", week: "Semana", list: "Lista" },
-        height: "auto",
-        dayMaxEvents: 3,
-        nowIndicator: true,
-        events: [
-          { title: "Reunión de equipo",  start: "2026-03-15T09:00:00", extendedProps: { descripcion: "Sala B-204" } },
-          { title: "Entrega de proyecto", start: "2026-03-18T12:30:00", extendedProps: { descripcion: "Subir al portal" } }
-        ],
         eventClick(info) {
           const e    = info.event;
-          const desc = e.extendedProps.descripcion;
           const date = e.start;
           document.getElementById("modalTitle").textContent = e.title;
           document.getElementById("modalTime").textContent  =
-            date.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+            date.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
           document.getElementById("modalDate").textContent  =
             `${date.getDate()} de ${MONTHS_ES[date.getMonth()]} ${date.getFullYear()}`;
-          const descRow = document.getElementById("modalDescRow");
-          if (desc) {
-            document.getElementById("modalDesc").textContent = desc;
-            descRow.style.display = "flex";
-          } else {
-            descRow.style.display = "none";
-          }
+          const desc = e.extendedProps.descripcion;
+          const loc  = e.extendedProps.location;
+          document.getElementById("modalDescRow").style.display = desc ? "flex" : "none";
+          document.getElementById("modalDesc").textContent = desc || "";
+          document.getElementById("modalLocRow").style.display  = loc  ? "flex" : "none";
+          document.getElementById("modalLoc").textContent  = loc  || "";
           document.getElementById("modalOverlay").classList.add("open");
         }
       });
       calendar.render();
-    });
- 
-    function addEventToCalendar(evento) {
-      calendar.addEvent({
-        title: evento.titulo,
-        start: `${evento.fecha}T${evento.hora}:00`,
-        extendedProps: { descripcion: evento.descripcion || "" }
-      });
     }
- 
-    // ── MODAL ────────────────────────────────────────────
-    function closeModal(e) {
-      if (!e || e.target === document.getElementById("modalOverlay") || !e.target.closest) {
+
+    window.closeModal = function(e) {
+      if (!e || e.target === document.getElementById("modalOverlay"))
         document.getElementById("modalOverlay").classList.remove("open");
-      }
-    }
- 
-    // ── CHAT — con desplazamiento del calendario ─────────
-    function toggleChat() {
+    };
+
+    // ── CHAT ─────────────────────────────────────────────
+    window.toggleChat = function() {
       chatOpen = !chatOpen;
       document.getElementById("chatWindow").classList.toggle("open", chatOpen);
-      // ← Recorre el calendario cuando el chat abre/cierra
       document.getElementById("calMain").classList.toggle("chat-open", chatOpen);
       if (chatOpen) document.getElementById("chatInput").focus();
-    }
- 
-    async function sendMessage() {
+      else speechSynthesis.cancel();
+    };
+
+    window.sendMessage = async function() {
       const input = document.getElementById("chatInput");
       const text  = input.value.trim();
       if (!text) return;
- 
+
       appendMsg(text, "user");
-      input.value = "";
-      input.style.height = "auto";
+      input.value = ""; input.style.height = "auto";
       setSendDisabled(true);
       showTyping();
- 
+
       try {
-        const res = await fetch(`${API_BASE}/evento`, {
+        // POST /api/chat/ — ChatRequest: { message, history }
+        // ChatResponse: { response, intent, cached }
+        const res = await fetchWithAuth(`${API_BASE}/api/chat/`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mensaje: text })
+          headers: await authHeaders(),
+          body: JSON.stringify({ message: text, history: chatHistory })
         });
+
         removeTyping();
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        if (!res.ok) throw new Error();
         const data = await res.json();
-        if (data.fecha && data.titulo) {
-          pendingEvento = data;
-          showEventConfirmation(data);
+
+        // Actualizar historial con el intercambio completo
+        chatHistory.push({ role: "user", content: text });
+        chatHistory.push({ role: "assistant", content: data.response });
+
+        // Si el intent es "crear_evento", el back devuelve el evento en response como JSON
+        if (data.intent === "crear_evento") {
+          try {
+            const evento = JSON.parse(data.response);
+            pendingEvento = evento;
+            showEventConfirmation(evento);
+          } catch {
+            appendMsg(data.response, "bot");
+          }
         } else {
-          appendMsg(data.respuesta || "No pude identificar un evento. ¿Puedes ser más específico con la fecha y hora?", "bot");
+          appendMsg(data.response, "bot");
+          speak(data.response);
         }
-      } catch (err) {
+
+      } catch {
         removeTyping();
-        appendErrorMsg("Backend no disponible — modo demo activo");
-        const demo = {
-          fecha: "2026-03-20", hora: "10:00",
-          titulo: text.length > 40 ? text.substring(0, 40) + "..." : text,
-          descripcion: "Agendado por el asistente (demo)"
-        };
-        pendingEvento = demo;
-        showEventConfirmation(demo);
-        console.warn("FastAPI no disponible:", err);
+        appendMsg("No se pudo conectar con el asistente.", "bot");
       }
- 
+
       setSendDisabled(false);
+    };
+
+    async function confirmEvent() {
+      if (!pendingEvento) return;
+      try {
+        // POST /api/calendar/events — CreateEventRequest: { title, start, end, description, location }
+        const res = await fetchWithAuth(`${API_BASE}/api/calendar/events`, {
+          method: "POST",
+          headers: await authHeaders(),
+          body: JSON.stringify({
+            title:       pendingEvento.titulo || pendingEvento.title,
+            start:       `${pendingEvento.fecha}T${pendingEvento.hora}:00`,
+            end:         `${pendingEvento.fecha}T${pendingEvento.hora_fin || addOneHour(pendingEvento.hora)}:00`,
+            description: pendingEvento.descripcion || null,
+            location:    null
+          })
+        });
+        if (!res.ok) throw new Error();
+        const created = await res.json();
+
+        // Agrega al calendario local
+        calendar.addEvent({
+          id: created.id, title: created.title,
+          start: created.start, end: created.end,
+          extendedProps: { descripcion: created.description, location: created.location }
+        });
+
+        const card = document.getElementById("confirmCard");
+        if (card) card.innerHTML = `✅ <strong>${escapeHtml(created.title)}</strong> agendado.<div class="msg-time">${getTime()}</div>`;
+        calendar.refetchEvents();
+      } catch {
+        appendMsg("No se pudo crear el evento. Intenta de nuevo.", "bot");
+      }
+      pendingEvento = null;
     }
- 
+
+    window.uploadImage = async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = "";
+
+      appendMsg(`📎 ${escapeHtml(file.name)}`, "user");
+      setSendDisabled(true);
+      showTyping();
+
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload  = e => resolve(e.target.result.split(",")[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        const res = await fetchWithAuth(`${API_BASE}/api/chat/image`, {
+          method: "POST",
+          headers: await authHeaders(),
+          body: JSON.stringify({
+            image_base64: base64,
+            mime_type: file.type || "image/png",
+            message: "Analiza este horario y registra las clases en mi calendario.",
+          })
+        });
+
+        removeTyping();
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+
+        chatHistory.push({ role: "assistant", content: data.response });
+        appendMsg(data.response, "bot");
+        speak(data.response);
+
+        needsOnboarding = false;
+        document.getElementById("uploadBtn").style.display = "none";
+        calendar.refetchEvents();
+
+      } catch {
+        removeTyping();
+        appendMsg("No se pudo procesar la imagen. Intenta de nuevo.", "bot");
+      }
+
+      setSendDisabled(false);
+    };
+
+    window.confirmEvent = confirmEvent;
+    window.cancelEvent  = function() {
+      const card = document.getElementById("confirmCard");
+      if (card) card.innerHTML = `Entendido, no agendé nada. ¿Hay algo más?<div class="msg-time">${getTime()}</div>`;
+      pendingEvento = null;
+    };
+
     function showEventConfirmation(evento) {
       const msgs = document.getElementById("chatMessages");
       const div  = document.createElement("div");
-      div.className = "msg bot";
-      div.id = "confirmCard";
-      const fechaStr = formatFecha(evento.fecha);
+      div.className = "msg bot"; div.id = "confirmCard";
+      const titulo = escapeHtml(evento.titulo || evento.title || "");
+      const fecha  = escapeHtml(formatFecha(evento.fecha));
+      const hora   = escapeHtml(evento.hora || "");
+      const desc   = evento.descripcion ? `<div class="ec-detail">📝 ${escapeHtml(evento.descripcion)}</div>` : "";
       div.innerHTML = `
         Encontré este evento. ¿Lo agendo?
         <div class="event-card-msg">
-          <div class="ec-title">📅 ${evento.titulo}</div>
-          <div class="ec-detail">🕐 ${fechaStr} a las ${evento.hora}</div>
-          ${evento.descripcion ? `<div class="ec-detail">📝 ${evento.descripcion}</div>` : ""}
+          <div class="ec-title">📅 ${titulo}</div>
+          <div class="ec-detail">🕐 ${fecha} a las ${hora}</div>
+          ${desc}
           <div class="ec-actions">
             <button class="ec-btn ec-btn-confirm" onclick="confirmEvent()">✓ Confirmar</button>
             <button class="ec-btn ec-btn-cancel"  onclick="cancelEvent()">Cancelar</button>
           </div>
         </div>
-        <div class="msg-time">${getTime()}</div>
-      `;
+        <div class="msg-time">${getTime()}</div>`;
       msgs.appendChild(div);
       scrollChat();
     }
- 
-    function confirmEvent() {
-      if (!pendingEvento) return;
-      addEventToCalendar(pendingEvento);
-      const card = document.getElementById("confirmCard");
-      if (card) {
-        card.innerHTML = `
-          ✅ <strong>${pendingEvento.titulo}</strong> agendado para el
-          ${formatFecha(pendingEvento.fecha)} a las ${pendingEvento.hora}.
-          <div class="msg-time">${getTime()}</div>
-        `;
-      }
-      pendingEvento = null;
-      scrollChat();
-    }
- 
-    function cancelEvent() {
-      const card = document.getElementById("confirmCard");
-      if (card) {
-        card.innerHTML = `Entendido, no agendé nada. ¿Hay algo más?<div class="msg-time">${getTime()}</div>`;
-      }
-      pendingEvento = null;
-    }
- 
+
     function appendMsg(text, type) {
       const msgs = document.getElementById("chatMessages");
       const div  = document.createElement("div");
       div.className = `msg ${type}`;
-      div.innerHTML  = `${text}<div class="msg-time">${getTime()}</div>`;
-      msgs.appendChild(div);
-      scrollChat();
+      div.innerHTML = `${escapeHtml(text).replace(/\n/g, "<br>")}<div class="msg-time">${getTime()}</div>`;
+      msgs.appendChild(div); scrollChat();
     }
- 
-    function appendErrorMsg(text) {
+
+    function appendPendingMsg(text) {
       const msgs = document.getElementById("chatMessages");
       const div  = document.createElement("div");
-      div.className = "msg-error";
-      div.textContent = text;
-      msgs.appendChild(div);
-      scrollChat();
+      div.className = "pending-notice";
+      div.textContent = `⏳ ${text}`;
+      msgs.appendChild(div); scrollChat();
     }
- 
+
     function showTyping() {
       const msgs = document.getElementById("chatMessages");
       const div  = document.createElement("div");
       div.className = "typing"; div.id = "typingIndicator";
       div.innerHTML = "<span></span><span></span><span></span>";
-      msgs.appendChild(div);
-      scrollChat();
+      msgs.appendChild(div); scrollChat();
     }
- 
     function removeTyping() { document.getElementById("typingIndicator")?.remove(); }
-    function scrollChat() {
-      const m = document.getElementById("chatMessages");
-      m.scrollTop = m.scrollHeight;
+    function scrollChat() { const m = document.getElementById("chatMessages"); m.scrollTop = m.scrollHeight; }
+    function setSendDisabled(v) { document.getElementById("sendBtn").disabled = document.getElementById("chatInput").disabled = v; }
+    window.handleKey   = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); window.sendMessage(); } };
+    window.autoResize  = el => { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 90) + "px"; };
+    function getTime()  { return new Date().toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" }); }
+    function formatFecha(f) { const [y,m,d] = f.split("-").map(Number); return `${d} de ${MONTHS_ES[m-1]} ${y}`; }
+    function addOneHour(hhmm) {
+      const [h, m] = hhmm.split(":").map(Number);
+      return `${String((h + 1) % 24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
     }
-    function setSendDisabled(v) {
-      document.getElementById("sendBtn").disabled   = v;
-      document.getElementById("chatInput").disabled = v;
+
+    // ── TTS ──────────────────────────────────────────────────────────────────
+    function speak(text) {
+      if (!ttsEnabled) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text.replace(/<[^>]*>/g, ''));
+      u.lang = 'es-MX'; u.rate = 1.05;
+      speechSynthesis.speak(u);
     }
-    function handleKey(e) {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    window.toggleTTS = function() {
+      ttsEnabled = !ttsEnabled;
+      const btn = document.getElementById("ttsToggle");
+      btn.textContent = ttsEnabled ? "🔊" : "🔇";
+      btn.classList.toggle("active", ttsEnabled);
+      if (!ttsEnabled) speechSynthesis.cancel();
+    };
+
+    // ── VOICE INPUT ──────────────────────────────────────────────────────────
+    function initVoice() {
+      const micBtn = document.getElementById("micBtn");
+      if (!SpeechRec) {
+        if (micBtn) { micBtn.disabled = true; micBtn.title = "Solo disponible en Chrome/Edge"; }
+        return;
+      }
+      recognition = new SpeechRec();
+      recognition.lang = 'es-MX';
+      recognition.interimResults = false;
+      recognition.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        const input = document.getElementById("chatInput");
+        input.value = text;
+        window.autoResize(input);
+        window.sendMessage();
+      };
+      recognition.onend = () => stopListening();
+      recognition.onerror = () => stopListening();
     }
-    function autoResize(el) {
-      el.style.height = "auto";
-      el.style.height = Math.min(el.scrollHeight, 90) + "px";
+    window.toggleVoice = function() {
+      if (!recognition) return;
+      isListening ? stopListening() : startListening();
+    };
+    function startListening() {
+      isListening = true;
+      recognition.start();
+      document.getElementById("micBtn").classList.add("listening");
+      speechSynthesis.cancel();
     }
-    function getTime() {
-      return new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+    function stopListening() {
+      isListening = false;
+      recognition?.stop();
+      const micBtn = document.getElementById("micBtn");
+      if (micBtn) micBtn.classList.remove("listening");
     }
-    function formatFecha(f) {
-      const [y, m, d] = f.split("-").map(Number);
-      return `${d} de ${MONTHS_ES[m - 1]} ${y}`;
+
+    // ── SCHEDULE PANEL ───────────────────────────────────────────────────────
+    window.toggleSchedulePanel = async function() {
+      schedulePanelOpen = !schedulePanelOpen;
+      document.getElementById("schedulePanel").classList.toggle("open", schedulePanelOpen);
+      if (schedulePanelOpen) await loadSchedulePanel();
+    };
+    async function loadSchedulePanel() {
+      const list = document.getElementById("scheduleList");
+      list.innerHTML = '<p class="sp-empty">Cargando…</p>';
+      try {
+        const res = await fetchWithAuth(`${API_BASE}/api/calendar/events?max_results=50`, { headers: await authHeaders() });
+        if (!res.ok) throw new Error("Error al obtener eventos");
+        const events = await res.json();
+
+        const now = new Date();
+        const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + 7);
+
+        const grouped = {};
+        for (const e of events) {
+          const d = new Date(e.start);
+          if (d < now || d > weekEnd) continue;
+          const key = d.toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'short' });
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(e);
+        }
+
+        if (!Object.keys(grouped).length) {
+          list.innerHTML = '<p class="sp-empty">Sin eventos esta semana</p>';
+          return;
+        }
+        list.innerHTML = Object.entries(grouped).map(([day, evs]) => `
+          <div class="sp-day">
+            <div class="sp-day-label">${escapeHtml(day)}</div>
+            ${evs.map(e => `
+              <div class="sp-event">
+                <span class="sp-event-title">${escapeHtml(e.title)}</span>
+                <span class="sp-event-time">${new Date(e.start).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</span>
+                <button class="sp-edit-btn" data-title="${escapeHtml(e.title)}" data-start="${escapeHtml(e.start)}">Editar</button>
+              </div>
+            `).join('')}
+          </div>
+        `).join('');
+        list.querySelectorAll('.sp-edit-btn').forEach(btn => {
+          btn.addEventListener('click', () => editWithGemini(btn.dataset.title, btn.dataset.start));
+        });
+      } catch (err) {
+        list.innerHTML = `<p class="sp-empty">No se pudieron cargar los eventos</p>`;
+      }
     }
-    function toggleMenu() {
-      document.getElementById("mainMenu").classList.toggle("open");
-    }
-    document.addEventListener("click", (e) => {
+    window.editWithGemini = function(title, start) {
+      const fecha = new Date(start).toLocaleDateString('es-MX', { weekday:'long', day:'numeric', month:'long' });
+      const input = document.getElementById("chatInput");
+      input.value = `Quiero editar el evento "${title}" del ${fecha}`;
+      window.autoResize(input);
+      if (!chatOpen) window.toggleChat();
+      input.focus();
+    };
+
+    window.handleLogout = async () => { signOut(); window.location.href = "login.html"; };
+    window.toggleMenu   = () => document.getElementById("mainMenu").classList.toggle("open");
+    document.addEventListener("click", e => {
       if (!e.target.closest(".menu-btn") && !e.target.closest(".dropdown"))
         document.getElementById("mainMenu").classList.remove("open");
     });
   </script>
- 
 </body>
 </html>
