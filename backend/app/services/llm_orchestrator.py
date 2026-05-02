@@ -74,6 +74,8 @@ class HermesState(HermesStateRequired, total=False):
     intent: str
     response: str
     calendar_result: dict
+    semester_start: str  # YYYY-MM-DD
+    semester_end: str    # YYYY-MM-DD
 
 
 # ─────────────────────────────────────────────
@@ -160,27 +162,37 @@ Mensaje del usuario: "{state['message']}"
 
 Responde SOLO con el JSON, sin markdown ni explicación."""
 
-    parse_response = llm.invoke([HumanMessage(content=parse_prompt)])
+    parse_response = await llm.ainvoke([HumanMessage(content=parse_prompt)])
 
     result = None
     confirmation = "No entendí qué acción querías realizar en tu calendario."
 
+    # Gemini a veces envuelve el JSON en ```json ... ``` — lo limpiamos
+    raw = parse_response.content.strip()
+    json_match = __import__("re").search(r"```(?:json)?\s*([\s\S]*?)```", raw)
+    raw = json_match.group(1).strip() if json_match else raw
+
     try:
-        action_data = json.loads(parse_response.content.strip())
+        action_data = json.loads(raw)
         action = action_data.get("action")
 
         if action == "create":
-            result = create_calendar_event(
-                google_token=google_token,
-                title=action_data.get("title", "Nuevo evento"),
-                start=action_data["start"],
-                end=action_data["end"],
-                description=action_data.get("description"),
-                location=action_data.get("location"),
-            )
-            confirmation = (
-                f"Listo. Creé el evento '{result['title']}' para el {result['start']}."
-            )
+            # Devolvemos los datos al frontend para que el usuario confirme.
+            # El frontend muestra la tarjeta de confirmación y crea el evento
+            # via POST /api/calendar/events al confirmar.
+            start_str = action_data.get("start", "")
+            end_str   = action_data.get("end", "")
+            return {
+                "response": json.dumps({
+                    "titulo":      action_data.get("title", "Nuevo evento"),
+                    "fecha":       start_str[:10],
+                    "hora":        start_str[11:16],
+                    "hora_fin":    end_str[11:16],
+                    "descripcion": action_data.get("description"),
+                }),
+                "intent": "crear_evento",
+                "calendar_result": None,
+            }
 
         elif action == "read":
             events = get_calendar_events(
@@ -350,6 +362,9 @@ Determina en qué paso estás según el historial. NO uses asteriscos, emojis ni
 
     if user_message != "__init__":
         lc_messages.append(HumanMessage(content=user_message))
+    else:
+        # Gemini requiere al menos un HumanMessage — __init__ solo activa el saludo inicial
+        lc_messages.append(HumanMessage(content="Hola."))
 
     llm = get_llm()
     response = await llm.ainvoke(lc_messages)

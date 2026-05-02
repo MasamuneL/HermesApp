@@ -1,14 +1,31 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 from app.routers import users, ranking, chat, logros, calendar
+from app.database.postgres import engine
 
 load_dotenv()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Aplica schema.sql al arrancar — idempotente gracias a CREATE TABLE IF NOT EXISTS
+    schema_path = os.path.join(os.path.dirname(__file__), "database", "schema.sql")
+    if os.path.exists(schema_path):
+        with open(schema_path, "r") as f:
+            sql = f.read()
+        async with engine.connect() as conn:
+            raw = await conn.get_raw_connection()
+            await raw.driver_connection.execute(sql)
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="Hermes API",
     description="Backend de la app académica Hermes — calendario inteligente, ranking y chatbot con Gemini.",
     version="0.0.3",

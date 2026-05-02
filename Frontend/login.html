@@ -132,6 +132,10 @@
         tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: SCOPES,
+          // false = solicita todos los scopes cada vez, no sólo los ya concedidos.
+          // Sin esto, usuarios que hicieron login previo sin scope de Calendar
+          // recibirían un token sin Calendar y el backend devolvería 403.
+          include_granted_scopes: false,
           callback: handleTokenResponse,
         });
       }
@@ -157,6 +161,7 @@
 
         // Guardar en sessionStorage
         sessionStorage.setItem("google_token", token);
+        sessionStorage.setItem("token_expires_at", String(Date.now() + (resp.expires_in ?? 3600) * 1000));
         sessionStorage.setItem("user_info", JSON.stringify({
           email: userInfo.email,
           name: userInfo.name,

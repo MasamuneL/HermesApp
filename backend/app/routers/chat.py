@@ -185,6 +185,9 @@ async def process_image_endpoint(
         image_mime_type=body.mime_type,
     )
 
+    if result.get("calendar_result"):
+        await set_onboarding_complete(str(user.id))
+
     return ChatResponse(
         response=result["response"],
         intent=result["intent"],
