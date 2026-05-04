@@ -41,7 +41,7 @@ Para que Hermes funcione correctamente, el sistema integra diversas tecnologías
 2. Abre tu terminal en la carpeta donde guardaste el archivo y ejecuta el siguiente comando para instalar todas las dependencias externas:
    ```bash
    pip install sounddevice scipy gTTS pygame sqlalchemy python-dotenv google-genai
-GOOGLE_API_KEY="AIzaSyCHUaIoyv-qf2U0mZaQNWiOPapChR5Vr3I"   # En esta parte agregamos nuestra clave de google, aparece aqui: https://aistudio.google.com/app/u/1/api-keys?project=gen-lang-client-0750386781&pli=1
+GOOGLE_API_KEY=""   # En esta parte agregamos nuestra clave de google, aparece aqui: archivo ".env"
                                                            # La que utilizamos es la que está donde dice "HermesAPP"
 
 
