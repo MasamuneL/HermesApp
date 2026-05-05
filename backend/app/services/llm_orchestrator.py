@@ -145,6 +145,18 @@ async def calendar_action_node(state: HermesState) -> dict:
         temperature=0.0,
     )
 
+    # Fetch upcoming events so Gemini can resolve event_id for update/delete
+    upcoming_events = []
+    events_context = ""
+    try:
+        upcoming_events = get_calendar_events(google_token, max_results=30)
+        if upcoming_events:
+            events_context = "\n\nEventos próximos del usuario (usa el ID exacto para update/delete):\n"
+            for e in upcoming_events:
+                events_context += f"- ID: {e['id']} | Título: {e['title']} | Inicio: {e['start']}\n"
+    except Exception:
+        pass
+
     parse_prompt = f"""El usuario quiere hacer una acción en su Google Calendar.
 Analiza el mensaje y devuelve un JSON con la acción a realizar.
 
@@ -154,9 +166,12 @@ Formatos de respuesta:
 - create:  {{"action":"create","title":"...","start":"YYYY-MM-DDTHH:MM:SS","end":"YYYY-MM-DDTHH:MM:SS","description":"...","location":"..."}}
 - read:    {{"action":"read","max_results":10}}
 - search:  {{"action":"search","query":"..."}}
-- update:  {{"action":"update","event_id":"...","title":"...","start":"...","end":"..."}}
-- delete:  {{"action":"delete","event_id":"...","query":"..."}}
+- update:  {{"action":"update","event_id":"<ID exacto de la lista>","title":"...","start":"YYYY-MM-DDTHH:MM:SS","end":"YYYY-MM-DDTHH:MM:SS","description":"...","location":"..."}}
+- delete:  {{"action":"delete","event_id":"<ID exacto de la lista>"}}
 
+Para update y delete DEBES usar el event_id exacto de la lista de eventos de abajo.
+Si no puedes identificar el evento por ID, en delete puedes usar: {{"action":"delete","query":"nombre aproximado"}}
+{events_context}
 Fecha y hora actual: {datetime.now().isoformat()}
 Mensaje del usuario: "{state['message']}"
 
@@ -235,16 +250,27 @@ Responde SOLO con el JSON, sin markdown ni explicación."""
                 confirmation = "Evento eliminado correctamente."
 
         elif action == "update":
-            result = update_calendar_event(
-                google_token=google_token,
-                event_id=action_data["event_id"],
-                title=action_data.get("title"),
-                start=action_data.get("start"),
-                end=action_data.get("end"),
-                description=action_data.get("description"),
-                location=action_data.get("location"),
-            )
-            confirmation = f"Actualicé el evento '{result['title']}'."
+            event_id = action_data.get("event_id")
+            if not event_id and action_data.get("query"):
+                found = search_calendar_events(
+                    google_token, query=action_data["query"], max_results=1
+                )
+                if found:
+                    event_id = found[0]["id"]
+                else:
+                    confirmation = f"No encontré el evento '{action_data.get('query')}' para actualizar."
+                    event_id = None
+            if event_id:
+                result = update_calendar_event(
+                    google_token=google_token,
+                    event_id=event_id,
+                    title=action_data.get("title"),
+                    start=action_data.get("start"),
+                    end=action_data.get("end"),
+                    description=action_data.get("description"),
+                    location=action_data.get("location"),
+                )
+                confirmation = f"Actualicé el evento '{result['title']}'."
 
     except Exception as e:
         confirmation = f"Tuve un problema con la acción del calendario: {str(e)}"
