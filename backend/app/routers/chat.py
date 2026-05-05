@@ -9,6 +9,9 @@ Endpoints:
   POST /api/chat/image    — Imagen de horario para OCR + registro en Calendar
 """
 
+import asyncio
+import functools
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,10 +32,14 @@ from app.services.action_tools import get_calendar_events
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
 
-def _check_calendar(google_token: str) -> bool:
+async def _check_calendar(google_token: str) -> bool:
     """Retorna True si el usuario tiene al menos un evento en Google Calendar."""
     try:
-        return len(get_calendar_events(google_token, max_results=1)) > 0
+        loop = asyncio.get_running_loop()
+        events = await loop.run_in_executor(
+            None, functools.partial(get_calendar_events, google_token, max_results=1)
+        )
+        return len(events) > 0
     except Exception:
         return False
 
@@ -47,7 +54,7 @@ async def _resolve_onboarding(user_id: str, user_name: str, google_token: str) -
     if await get_onboarding_status(user_id):
         return False  # ya completó onboarding
 
-    has_calendar = _check_calendar(google_token)
+    has_calendar = await _check_calendar(google_token)
     if user_name and has_calendar:
         await set_onboarding_complete(user_id)
         return False

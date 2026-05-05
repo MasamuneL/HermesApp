@@ -18,7 +18,7 @@ DATABASE_URL = os.getenv(
 # Crear engine
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,  # Muestra las queries SQL en consola (útil para debug)
+    echo=os.getenv("SQL_ECHO", "false").lower() == "true",  # Muestra las queries SQL en consola (útil para debug)
     pool_pre_ping=True,  # Verifica que la conexión esté viva
 )
 

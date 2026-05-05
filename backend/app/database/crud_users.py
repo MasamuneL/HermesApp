@@ -54,8 +54,6 @@ async def create_user(
     ranking = Ranking(id=user.id, user_id=user.id, points=0)
     db.add(ranking)
     
-    await db.commit()
-    await db.refresh(user)
     return user
 
 # ==========================================
@@ -157,8 +155,8 @@ async def update_user(
         .where(User.id == user_id)
         .values(**update_data)
     )
-    await db.commit()
-    
+    await db.flush()
+
     return await get_user_by_id(db, user_id)
 
 async def deactivate_user(db: AsyncSession, user_id: uuid.UUID) -> bool:
@@ -173,7 +171,7 @@ async def deactivate_user(db: AsyncSession, user_id: uuid.UUID) -> bool:
         .where(User.id == user_id)
         .values(is_active=False)
     )
-    await db.commit()
+    await db.flush()
     return True
 
 # ==========================================
@@ -191,7 +189,7 @@ async def delete_user(db: AsyncSession, user_id: uuid.UUID) -> bool:
     result = await db.execute(
         delete(User).where(User.id == user_id)
     )
-    await db.commit()
+    await db.flush()
     return result.rowcount > 0
 
 # ==========================================
