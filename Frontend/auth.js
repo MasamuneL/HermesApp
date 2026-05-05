@@ -1,4 +1,4 @@
-export const API_BASE = "http://localhost:8000";
+export const API_BASE = "";
 
 export function getToken() {
   return sessionStorage.getItem("google_token");

@@ -54,6 +54,18 @@ services:
     networks:
       - hermes_network
 
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: hermes_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - hermes_network
+
 networks:
   hermes_network:
     driver: bridge
