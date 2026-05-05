@@ -29,6 +29,7 @@ Punto de entrada: process_message()
 """
 
 import os
+import re
 import json
 from datetime import datetime, timedelta
 from typing import Optional, TypedDict
@@ -184,7 +185,7 @@ Responde SOLO con el JSON, sin markdown ni explicación."""
 
     # Gemini a veces envuelve el JSON en ```json ... ``` — lo limpiamos
     raw = parse_response.content.strip()
-    json_match = __import__("re").search(r"```(?:json)?\s*([\s\S]*?)```", raw)
+    json_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", raw)
     raw = json_match.group(1).strip() if json_match else raw
 
     try:
@@ -270,10 +271,11 @@ Responde SOLO con el JSON, sin markdown ni explicación."""
                     description=action_data.get("description"),
                     location=action_data.get("location"),
                 )
-                confirmation = f"Actualicé el evento '{result['title']}'."
+                confirmation = f"Actualicé el evento '{result.get('title', 'seleccionado')}'."
 
     except Exception as e:
-        confirmation = f"Tuve un problema con la acción del calendario: {str(e)}"
+        print(f"[HERMES][calendar_action_node] Error: {e}")
+        confirmation = "Tuve un problema procesando la acción del calendario. Intenta de nuevo."
         result = None
 
     return {"response": confirmation, "calendar_result": result}
