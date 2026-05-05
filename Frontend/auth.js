@@ -41,7 +41,15 @@ export function signOut() {
 }
 
 export async function fetchWithAuth(url, options = {}) {
-  const headers = await authHeaders(options.headers || {});
+  const token = getToken();
+  const isFormData = options.body instanceof FormData;
+  let headers;
+  if (isFormData) {
+    headers = { ...(options.headers || {}) };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    headers = await authHeaders(options.headers || {});
+  }
   const response = await fetch(url, { ...options, headers });
   if (response.status === 401) {
     signOut();
