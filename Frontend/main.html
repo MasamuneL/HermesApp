@@ -184,6 +184,15 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+    // date-only strings like "2026-05-08" must be parsed as local midnight,
+    // not UTC midnight (which shifts the date in non-UTC timezones)
+    function parseEventDate(str) {
+      if (str && /^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        const [y, m, d] = str.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+      return new Date(str);
+    }
   </script>
   <script type="module">
     import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
@@ -211,12 +220,16 @@
 
         const now = new Date();
         allEvents = data.map(e => {
-          const start = new Date(e.start);
+          const isAllDay = /^\d{4}-\d{2}-\d{2}$/.test(e.start);
+          const start = parseEventDate(e.start);
           let day = "otro";
           if (start >= today    && start < tomorrow) day = "hoy";
           if (start >= tomorrow && start < dayAfter) day = "manana";
-          return { ...e, day, hora: start.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" }) };
-        }).filter(e => new Date(e.start) >= now);
+          const hora = isAllDay
+            ? "Todo el día"
+            : start.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
+          return { ...e, _start: start, _allDay: isAllDay, day, hora };
+        }).filter(e => e._start >= (e._allDay ? today : now));
 
         updateStats();
         filterEvents("hoy", document.querySelector(".tab.active"));
@@ -265,7 +278,7 @@
           <span class="event-badge badge-event">${
             e.day === "hoy" ? "Hoy" :
             e.day === "manana" ? "Mañana" :
-            escapeHtml(new Date(e.start).toLocaleDateString("es-MX", { day:"numeric", month:"short" }))
+            escapeHtml(e._start.toLocaleDateString("es-MX", { day:"numeric", month:"short" }))
           }</span>
         </div>
       `).join("");
