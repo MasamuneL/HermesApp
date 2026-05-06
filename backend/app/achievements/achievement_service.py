@@ -161,7 +161,11 @@ async def _check_requirements(
         return level >= 10
     
     elif achievement_key in ["primer_evento", "primer_chat", "primer_amigo"]:
-        # Estos se otorgan en el primer evento
+        # These keys match exactly what event_achievement_map passes in for
+        # "event_created", "chat_sent", and "friend_added" events — this branch
+        # IS reachable. Returning True is correct: grant_achievement() already
+        # has an idempotency guard (checks ach_title in DB before inserting),
+        # so duplicate grants are safely prevented there.
         return True
     
     return False

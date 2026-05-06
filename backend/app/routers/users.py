@@ -15,13 +15,13 @@ from app.dependencies.auth import get_current_user
 from app.schemas.users import UserResponse, UpdateUserRequest
 from app.database.redis_operations import update_user_ranking
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/users", tags=["Usuarios"])
 
 
 class PuntosRequest(BaseModel):
-    puntos: int
+    puntos: int = Field(..., ge=1, le=500)
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -106,7 +106,8 @@ async def upload_photo(
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
-    ext = (foto.filename or "foto").rsplit(".", 1)[-1].lower()
+    MIME_TO_EXT = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+    ext = MIME_TO_EXT[foto.content_type]
     filename = f"{user.id}.{ext}"
     filepath = os.path.join(UPLOAD_DIR, filename)
 
