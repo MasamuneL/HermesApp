@@ -105,7 +105,11 @@
     .event-badge { font-size:10px; padding:3px 10px; border-radius:20px; letter-spacing:0.1em; text-transform:uppercase; font-weight:500; }
     .badge-event { background:#fef3e2; color:#b87a00; }
     .empty-state { padding:40px 24px; text-align:center; color:var(--muted); font-size:13px; }
-    .month-header { padding:8px 24px; font-size:10px; letter-spacing:0.25em; text-transform:uppercase; color:var(--muted); background:var(--surface); border-bottom:1px solid var(--border); font-weight:600; }
+    .month-header { padding:8px 24px; font-size:10px; letter-spacing:0.25em; text-transform:uppercase; color:var(--muted); background:var(--surface); border-bottom:1px solid var(--border); font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none; }
+    .month-header:hover { color:var(--gold); }
+    .month-header .chevron { transition:transform 0.2s; font-style:normal; }
+    .month-header.collapsed .chevron { transform:rotate(-90deg); }
+    .month-body.collapsed { display:none; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
   </style>
 </head>
@@ -296,10 +300,24 @@
         if (!byMonth[key]) byMonth[key] = [];
         byMonth[key].push(e);
       });
-      list.innerHTML = Object.entries(byMonth).map(([month, events]) =>
-        `<div class="month-header">${escapeHtml(month)}</div>` +
-        events.map(renderEventRow).join("")
+      list.innerHTML = Object.entries(byMonth).map(([month, events], i) =>
+        `<div class="month-header" onclick="toggleMonth(this)">
+          <span>${escapeHtml(month)}</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="month-body${i > 0 ? ' collapsed' : ''}">
+          ${events.map(renderEventRow).join("")}
+        </div>`
       ).join("");
+      // sync header state for pre-collapsed bodies
+      list.querySelectorAll('.month-body.collapsed').forEach(b =>
+        b.previousElementSibling.classList.add('collapsed')
+      );
+    };
+
+    window.toggleMonth = function(header) {
+      header.classList.toggle('collapsed');
+      header.nextElementSibling.classList.toggle('collapsed');
     };
 
     window.handleLogout = async function() {
