@@ -3,15 +3,17 @@
 Modelo de Achievement (Logro)
 Tabla: achievements
 """
+import uuid
 from sqlalchemy import Column, String, Integer, Boolean, ForeignKey, DateTime
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from app.database.postgres import Base
 
 class Achievement(Base):
     __tablename__ = "achievements"
-    
-    ach_id = Column(String(36), primary_key=True, default=lambda: str(__import__('uuid').uuid4()))
-    usr_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    ach_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    usr_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     ach_title = Column(String(255), nullable=False)
     ach_desc = Column(String)
     ach_points = Column(Integer, nullable=False)
