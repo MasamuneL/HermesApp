@@ -105,6 +105,7 @@
     .event-badge { font-size:10px; padding:3px 10px; border-radius:20px; letter-spacing:0.1em; text-transform:uppercase; font-weight:500; }
     .badge-event { background:#fef3e2; color:#b87a00; }
     .empty-state { padding:40px 24px; text-align:center; color:var(--muted); font-size:13px; }
+    .month-header { padding:8px 24px; font-size:10px; letter-spacing:0.25em; text-transform:uppercase; color:var(--muted); background:var(--surface); border-bottom:1px solid var(--border); font-weight:600; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
   </style>
 </head>
@@ -262,6 +263,19 @@
         : "No tienes eventos pendientes hoy";
     }
 
+    function renderEventRow(e) {
+      const badge = e.day === "hoy" ? "Hoy"
+        : e.day === "manana" ? "Mañana"
+        : escapeHtml(e._start.toLocaleDateString("es-MX", { day:"numeric", month:"short" }));
+      return `
+        <div class="event-item">
+          <span class="event-time">${escapeHtml(e.hora)}</span>
+          <div class="event-dot" style="background:var(--gold)"></div>
+          <span class="event-name">${escapeHtml(e.title)}</span>
+          <span class="event-badge badge-event">${badge}</span>
+        </div>`;
+    }
+
     window.filterEvents = function(day, btn) {
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       btn.classList.add("active");
@@ -271,18 +285,21 @@
         list.innerHTML = `<div class="empty-state">Sin eventos en este período</div>`;
         return;
       }
-      list.innerHTML = filtered.map(e => `
-        <div class="event-item">
-          <span class="event-time">${escapeHtml(e.hora)}</span>
-          <div class="event-dot" style="background:var(--gold)"></div>
-          <span class="event-name">${escapeHtml(e.title)}</span>
-          <span class="event-badge badge-event">${
-            e.day === "hoy" ? "Hoy" :
-            e.day === "manana" ? "Mañana" :
-            escapeHtml(e._start.toLocaleDateString("es-MX", { day:"numeric", month:"short" }))
-          }</span>
-        </div>
-      `).join("");
+      if (day !== "todos") {
+        list.innerHTML = filtered.map(renderEventRow).join("");
+        return;
+      }
+      // Group by month for "todos" view
+      const byMonth = {};
+      filtered.forEach(e => {
+        const key = e._start.toLocaleDateString("es-MX", { month:"long", year:"numeric" });
+        if (!byMonth[key]) byMonth[key] = [];
+        byMonth[key].push(e);
+      });
+      list.innerHTML = Object.entries(byMonth).map(([month, events]) =>
+        `<div class="month-header">${escapeHtml(month)}</div>` +
+        events.map(renderEventRow).join("")
+      ).join("");
     };
 
     window.handleLogout = async function() {
