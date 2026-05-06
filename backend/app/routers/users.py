@@ -13,8 +13,15 @@ from app.database.crud_users import (
 )
 from app.dependencies.auth import get_current_user
 from app.schemas.users import UserResponse, UpdateUserRequest
+from app.database.redis_operations import update_user_ranking
+
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/users", tags=["Usuarios"])
+
+
+class PuntosRequest(BaseModel):
+    puntos: int
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -110,6 +117,19 @@ async def upload_photo(
     photo_url = f"/static/fotos/{filename}"
     updated = await update_user(db, user.id, photo_url=photo_url)
     return updated
+
+
+@router.put("/puntos")
+async def update_puntos(
+    body: PuntosRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await get_user_by_email(db, current_user["email"])
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    await update_user_ranking(str(user.id), body.puntos)
+    return {"ok": True, "puntos": body.puntos}
 
 
 @router.delete("/me", status_code=204)
