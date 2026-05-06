@@ -229,7 +229,8 @@
             ? "Todo el día"
             : start.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
           return { ...e, _start: start, _allDay: isAllDay, day, hora };
-        }).filter(e => e._start >= (e._allDay ? today : now));
+        }).filter(e => e._start >= (e._allDay ? today : now))
+          .sort((a, b) => a._start - b._start);
 
         updateStats();
         filterEvents("hoy", document.querySelector(".tab.active"));
