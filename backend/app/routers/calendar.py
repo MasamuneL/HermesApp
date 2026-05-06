@@ -10,8 +10,13 @@ from google.oauth2.credentials import Credentials
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database.postgres import get_db
+from app.database.crud_users import get_user_by_email
 from app.dependencies.auth import get_current_user
 from app.schemas.calendar import CalendarEventResponse, CreateEventRequest
+from app.achievements import check_and_grant_achievements
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/calendar", tags=["Calendario"])
@@ -138,6 +143,7 @@ async def get_events(
 async def create_event(
     body: CreateEventRequest,
     current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     try:
         event_body = {
@@ -166,6 +172,13 @@ async def create_event(
         if not start:
             logger.error("Evento creado sin start en respuesta de Google: %s", created.get("id"))
             raise HTTPException(status_code=502, detail="Respuesta inválida de Google Calendar")
+
+        try:
+            user = await get_user_by_email(db, current_user["email"])
+            if user:
+                await check_and_grant_achievements(db, str(user.id), "event_created")
+        except Exception:
+            pass
 
         return CalendarEventResponse(
             id=created["id"],

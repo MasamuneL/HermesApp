@@ -28,7 +28,7 @@ async def create_achievement(
     )
     
     db.add(achievement)
-    await db.commit()
+    await db.flush()
     await db.refresh(achievement)
     return achievement
 
@@ -70,9 +70,9 @@ async def mark_achievement_completed(
     
     if achievement:
         achievement.status_completed = True
-        await db.commit()
+        await db.flush()
         await db.refresh(achievement)
-    
+
     return achievement
 
 
@@ -88,7 +88,7 @@ async def delete_achievement(
     
     if achievement:
         await db.delete(achievement)
-        await db.commit()
+        await db.flush()
         return True
     
     return False

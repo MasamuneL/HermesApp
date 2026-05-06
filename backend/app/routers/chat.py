@@ -28,6 +28,7 @@ from app.dependencies.auth import get_current_user
 from app.schemas.chat import ChatRequest, ChatResponse, GreetingResponse
 from app.services.llm_orchestrator import process_message
 from app.services.action_tools import get_calendar_events
+from app.achievements import check_and_grant_achievements
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
@@ -159,6 +160,11 @@ async def send_message_endpoint(
         await set_onboarding_complete(user_id)
 
     await cache_chat_response(body.message, result["response"], user_id)
+
+    try:
+        await check_and_grant_achievements(db, user_id, "chat_sent")
+    except Exception:
+        pass
 
     return ChatResponse(
         response=result["response"],

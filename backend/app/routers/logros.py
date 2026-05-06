@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database.postgres import get_db
+from app.database.crud_users import get_user_by_email
 from app.dependencies.auth import get_current_user
+from app.achievements import get_user_achievement_progress
 
 router = APIRouter(prefix="/api/logros", tags=["Logros"])
 
@@ -8,18 +12,9 @@ router = APIRouter(prefix="/api/logros", tags=["Logros"])
 @router.get("/me")
 async def get_my_achievements(
     current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    """
-    Retorna los logros desbloqueados del usuario autenticado.
-
-    Pendiente: Martin creará la tabla de achievements en la DB.
-    Cuando esté lista, este endpoint:
-    1. Busca al usuario por email en PostgreSQL
-    2. Consulta sus logros en la nueva tabla de achievements
-    3. Retorna la lista con AchievementsResponse
-    """
-    # TODO: implementar cuando Martin entregue la tabla de achievements
-    raise HTTPException(
-        status_code=501,
-        detail="Módulo de logros aún no implementado — esperando tabla de Martin",
-    )
+    user = await get_user_by_email(db, current_user["email"])
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return await get_user_achievement_progress(db, str(user.id))

@@ -129,37 +129,36 @@ async def _check_requirements(
     """
     # Lógica de verificación según el logro
     if achievement_key == "primera_tarea":
-        # Solo verificar si es la primera tarea
         task_count = kwargs.get("task_count", 0)
-        return task_count == 1
-    
+        return task_count >= 1
+
     elif achievement_key == "10_tareas":
         task_count = kwargs.get("task_count", 0)
-        return task_count == 10
-    
+        return task_count >= 10
+
     elif achievement_key == "50_tareas":
         task_count = kwargs.get("task_count", 0)
-        return task_count == 50
-    
+        return task_count >= 50
+
     elif achievement_key == "racha_3_dias":
         streak = kwargs.get("daily_streak", 0)
-        return streak == 3
-    
+        return streak >= 3
+
     elif achievement_key == "racha_7_dias":
         streak = kwargs.get("daily_streak", 0)
-        return streak == 7
-    
+        return streak >= 7
+
     elif achievement_key == "racha_30_dias":
         streak = kwargs.get("daily_streak", 0)
-        return streak == 30
-    
+        return streak >= 30
+
     elif achievement_key == "nivel_5":
         level = kwargs.get("level", 0)
-        return level == 5
-    
+        return level >= 5
+
     elif achievement_key == "nivel_10":
         level = kwargs.get("level", 0)
-        return level == 10
+        return level >= 10
     
     elif achievement_key in ["primer_evento", "primer_chat", "primer_amigo"]:
         # Estos se otorgan en el primer evento
