@@ -1,15 +1,14 @@
-export const API_BASE = "http://localhost:8000";
+export const API_BASE = "";
 
 export function getToken() {
   return sessionStorage.getItem("google_token");
 }
 
 export async function authHeaders(extra = {}) {
-  return {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${getToken()}`,
-    ...extra,
-  };
+  const token = getToken();
+  const headers = { "Content-Type": "application/json", ...extra };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
 }
 
 export function requireAuth(callback) {
@@ -24,7 +23,14 @@ export function requireAuth(callback) {
     window.location.href = "login.html";
     return;
   }
-  const userInfo = JSON.parse(sessionStorage.getItem("user_info") || "{}");
+  let userInfo = {};
+  try {
+    userInfo = JSON.parse(sessionStorage.getItem("user_info") || "{}");
+  } catch {
+    signOut();
+    window.location.href = "login.html";
+    return;
+  }
   callback(userInfo);
 }
 
@@ -35,7 +41,16 @@ export function signOut() {
 }
 
 export async function fetchWithAuth(url, options = {}) {
-  const response = await fetch(url, options);
+  const token = getToken();
+  const isFormData = options.body instanceof FormData;
+  let headers;
+  if (isFormData) {
+    headers = { ...(options.headers || {}) };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    headers = await authHeaders(options.headers || {});
+  }
+  const response = await fetch(url, { ...options, headers });
   if (response.status === 401) {
     signOut();
     window.location.href = "login.html";

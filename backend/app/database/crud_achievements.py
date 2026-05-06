@@ -2,6 +2,7 @@
 """
 CRUD para achievements (logros)
 """
+import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.database.achievement import Achievement
@@ -18,7 +19,7 @@ async def create_achievement(
 ) -> Achievement:
     """Crear un nuevo logro para un usuario"""
     achievement = Achievement(
-        usr_id=usr_id,
+        usr_id=uuid.UUID(usr_id),
         ach_title=ach_title,
         ach_desc=ach_desc,
         ach_points=ach_points,
@@ -26,9 +27,9 @@ async def create_achievement(
         fecha_objetivo=fecha_objetivo,
         status_completed=False
     )
-    
+
     db.add(achievement)
-    await db.commit()
+    await db.flush()
     await db.refresh(achievement)
     return achievement
 
@@ -39,7 +40,7 @@ async def get_user_achievements(
 ) -> List[Achievement]:
     """Obtener todos los logros de un usuario"""
     result = await db.execute(
-        select(Achievement).where(Achievement.usr_id == usr_id)
+        select(Achievement).where(Achievement.usr_id == uuid.UUID(usr_id))
     )
     return result.scalars().all()
 
@@ -51,7 +52,7 @@ async def get_completed_achievements(
     """Obtener logros completados de un usuario"""
     result = await db.execute(
         select(Achievement).where(
-            Achievement.usr_id == usr_id,
+            Achievement.usr_id == uuid.UUID(usr_id),
             Achievement.status_completed == True
         )
     )
@@ -64,15 +65,15 @@ async def mark_achievement_completed(
 ) -> Optional[Achievement]:
     """Marcar un logro como completado"""
     result = await db.execute(
-        select(Achievement).where(Achievement.ach_id == ach_id)
+        select(Achievement).where(Achievement.ach_id == uuid.UUID(str(ach_id)))
     )
     achievement = result.scalar_one_or_none()
-    
+
     if achievement:
         achievement.status_completed = True
-        await db.commit()
+        await db.flush()
         await db.refresh(achievement)
-    
+
     return achievement
 
 
@@ -82,13 +83,13 @@ async def delete_achievement(
 ) -> bool:
     """Eliminar un logro"""
     result = await db.execute(
-        select(Achievement).where(Achievement.ach_id == ach_id)
+        select(Achievement).where(Achievement.ach_id == uuid.UUID(str(ach_id)))
     )
     achievement = result.scalar_one_or_none()
-    
+
     if achievement:
         await db.delete(achievement)
-        await db.commit()
+        await db.flush()
         return True
-    
+
     return False

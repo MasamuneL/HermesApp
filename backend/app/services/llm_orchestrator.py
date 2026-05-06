@@ -29,9 +29,15 @@ Punto de entrada: process_message()
 """
 
 import os
+import re
 import json
+import asyncio
+import functools
+import logging
 from datetime import datetime, timedelta
 from typing import Optional, TypedDict
+
+logger = logging.getLogger(__name__)
 
 from langgraph.graph import StateGraph, START, END
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -52,6 +58,11 @@ from app.services.action_tools import (
     delete_calendar_event,
     search_calendar_events,
 )
+
+
+async def _run_sync(func, *args, **kwargs):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, functools.partial(func, *args, **kwargs))
 
 
 # ─────────────────────────────────────────────
@@ -89,13 +100,13 @@ async def classify_node(state: HermesState) -> dict:
     Prioridad: is_new_user → image_base64 → LLM classification
     """
     if state.get("is_new_user", False):
-        print(f"[HERMES] user={state['user_id']} → onboarding (sin calendario configurado)")
+        logger.debug(f"[HERMES] user={state['user_id']} → onboarding (sin calendario configurado)")
         return {"intent": "onboarding"}
     if state.get("image_base64"):
-        print(f"[HERMES] user={state['user_id']} → image_ocr (imagen recibida)")
+        logger.debug(f"[HERMES] user={state['user_id']} → image_ocr (imagen recibida)")
         return {"intent": "image_ocr"}
     intent = await classify_intent(state["message"])
-    print(f"[HERMES] user={state['user_id']} → {intent} | msg='{state['message'][:60]}'")
+    logger.debug(f"[HERMES] user={state['user_id']} → {intent} | msg='{state['message'][:60]}'")
     return {"intent": intent}
 
 
@@ -104,13 +115,13 @@ async def question_node(state: HermesState) -> dict:
     Responde preguntas generales sobre el calendario del usuario.
     Enriquece el contexto con los próximos eventos antes de responder.
     """
-    print(f"[HERMES][question_node] Consultando eventos y generando respuesta...")
+    logger.debug(f"[HERMES][question_node] Consultando eventos y generando respuesta...")
     google_token = state.get("google_token")
     events_context = ""
 
     if google_token:
         try:
-            events = get_calendar_events(google_token, max_results=20)
+            events = await _run_sync(get_calendar_events, google_token, max_results=20)
             if events:
                 events_context = "\n\nEventos próximos del usuario:\n"
                 for e in events:
@@ -131,7 +142,7 @@ async def calendar_action_node(state: HermesState) -> dict:
     Maneja acciones CRUD sobre Google Calendar.
     Usa Gemini para parsear la intención en una acción concreta y ejecutarla.
     """
-    print(f"[HERMES][calendar_action_node] Procesando acción de calendario...")
+    logger.debug(f"[HERMES][calendar_action_node] Procesando acción de calendario...")
     google_token = state.get("google_token")
     if not google_token:
         return {
@@ -145,6 +156,18 @@ async def calendar_action_node(state: HermesState) -> dict:
         temperature=0.0,
     )
 
+    # Fetch upcoming events so Gemini can resolve event_id for update/delete
+    upcoming_events = []
+    events_context = ""
+    try:
+        upcoming_events = await _run_sync(get_calendar_events, google_token, max_results=30)
+        if upcoming_events:
+            events_context = "\n\nEventos próximos del usuario (usa el ID exacto para update/delete):\n"
+            for e in upcoming_events:
+                events_context += f"- ID: {e['id']} | Título: {e['title']} | Inicio: {e['start']}\n"
+    except Exception:
+        pass
+
     parse_prompt = f"""El usuario quiere hacer una acción en su Google Calendar.
 Analiza el mensaje y devuelve un JSON con la acción a realizar.
 
@@ -154,9 +177,12 @@ Formatos de respuesta:
 - create:  {{"action":"create","title":"...","start":"YYYY-MM-DDTHH:MM:SS","end":"YYYY-MM-DDTHH:MM:SS","description":"...","location":"..."}}
 - read:    {{"action":"read","max_results":10}}
 - search:  {{"action":"search","query":"..."}}
-- update:  {{"action":"update","event_id":"...","title":"...","start":"...","end":"..."}}
-- delete:  {{"action":"delete","event_id":"...","query":"..."}}
+- update:  {{"action":"update","event_id":"<ID exacto de la lista>","title":"...","start":"YYYY-MM-DDTHH:MM:SS","end":"YYYY-MM-DDTHH:MM:SS","description":"...","location":"..."}}
+- delete:  {{"action":"delete","event_id":"<ID exacto de la lista>"}}
 
+Para update y delete DEBES usar el event_id exacto de la lista de eventos de abajo.
+Si no puedes identificar el evento por ID, en delete puedes usar: {{"action":"delete","query":"nombre aproximado"}}
+{events_context}
 Fecha y hora actual: {datetime.now().isoformat()}
 Mensaje del usuario: "{state['message']}"
 
@@ -169,7 +195,7 @@ Responde SOLO con el JSON, sin markdown ni explicación."""
 
     # Gemini a veces envuelve el JSON en ```json ... ``` — lo limpiamos
     raw = parse_response.content.strip()
-    json_match = __import__("re").search(r"```(?:json)?\s*([\s\S]*?)```", raw)
+    json_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", raw)
     raw = json_match.group(1).strip() if json_match else raw
 
     try:
@@ -195,8 +221,8 @@ Responde SOLO con el JSON, sin markdown ni explicación."""
             }
 
         elif action == "read":
-            events = get_calendar_events(
-                google_token, max_results=action_data.get("max_results", 10)
+            events = await _run_sync(
+                get_calendar_events, google_token, max_results=action_data.get("max_results", 10)
             )
             result = {"events": events}
             if events:
@@ -209,7 +235,7 @@ Responde SOLO con el JSON, sin markdown ni explicación."""
 
         elif action == "search":
             query = action_data.get("query", "")
-            events = search_calendar_events(google_token, query=query)
+            events = await _run_sync(search_calendar_events, google_token, query=query)
             result = {"events": events}
             if events:
                 resumen = ". ".join(f"{e['title']} el {e['start']}" for e in events)
@@ -220,34 +246,47 @@ Responde SOLO con el JSON, sin markdown ni explicación."""
         elif action == "delete":
             event_id = action_data.get("event_id")
             if not event_id and action_data.get("query"):
-                found = search_calendar_events(
-                    google_token, query=action_data["query"], max_results=1
+                found = await _run_sync(
+                    search_calendar_events, google_token, query=action_data["query"], max_results=1
                 )
                 if found:
                     event_id = found[0]["id"]
                     event_title = found[0]["title"]
-                    result = delete_calendar_event(google_token, event_id)
+                    result = await _run_sync(delete_calendar_event, google_token, event_id)
                     confirmation = f"Eliminé el evento '{event_title}'."
                 else:
                     confirmation = f"No encontré el evento '{action_data.get('query')}' para eliminar."
             elif event_id:
-                result = delete_calendar_event(google_token, event_id)
+                result = await _run_sync(delete_calendar_event, google_token, event_id)
                 confirmation = "Evento eliminado correctamente."
 
         elif action == "update":
-            result = update_calendar_event(
-                google_token=google_token,
-                event_id=action_data["event_id"],
-                title=action_data.get("title"),
-                start=action_data.get("start"),
-                end=action_data.get("end"),
-                description=action_data.get("description"),
-                location=action_data.get("location"),
-            )
-            confirmation = f"Actualicé el evento '{result['title']}'."
+            event_id = action_data.get("event_id")
+            if not event_id and action_data.get("query"):
+                found = await _run_sync(
+                    search_calendar_events, google_token, query=action_data["query"], max_results=1
+                )
+                if found:
+                    event_id = found[0]["id"]
+                else:
+                    confirmation = f"No encontré el evento '{action_data.get('query')}' para actualizar."
+                    event_id = None
+            if event_id:
+                result = await _run_sync(
+                    update_calendar_event,
+                    google_token=google_token,
+                    event_id=event_id,
+                    title=action_data.get("title"),
+                    start=action_data.get("start"),
+                    end=action_data.get("end"),
+                    description=action_data.get("description"),
+                    location=action_data.get("location"),
+                )
+                confirmation = f"Actualicé el evento '{result.get('title', 'seleccionado')}'."
 
     except Exception as e:
-        confirmation = f"Tuve un problema con la acción del calendario: {str(e)}"
+        logger.error(f"[HERMES][calendar_action_node] Error: {e}")
+        confirmation = "Tuve un problema procesando la acción del calendario. Intenta de nuevo."
         result = None
 
     return {"response": confirmation, "calendar_result": result}
@@ -258,7 +297,7 @@ async def image_ocr_node(state: HermesState) -> dict:
     Procesa una imagen de horario con Gemini Vision.
     Extrae las clases y las registra en Google Calendar como eventos semanales recurrentes.
     """
-    print(f"[HERMES][image_ocr_node] Analizando imagen de horario con Gemini Vision...")
+    logger.debug(f"[HERMES][image_ocr_node] Analizando imagen de horario con Gemini Vision...")
     image_base64 = state.get("image_base64")
     mime_type = state.get("image_mime_type", "image/png")
     google_token = state.get("google_token")
@@ -301,7 +340,8 @@ async def image_ocr_node(state: HermesState) -> dict:
                 start_dt = next_date.strftime(f"%Y-%m-%dT{hi}:00")
                 end_dt = next_date.strftime(f"%Y-%m-%dT{hf}:00")
 
-                create_calendar_event(
+                await _run_sync(
+                    create_calendar_event,
                     google_token=google_token,
                     title=cls.get("materia", "Clase"),
                     start=start_dt,
@@ -333,7 +373,7 @@ async def onboarding_node(state: HermesState) -> dict:
     3. Pide que suba una imagen de su horario de clases para configurar el calendario.
     4. Una vez subido el horario, confirma que todo quedó registrado.
     """
-    print(f"[HERMES][onboarding_node] Iniciando flujo de onboarding...")
+    logger.debug(f"[HERMES][onboarding_node] Iniciando flujo de onboarding...")
 
     chat_history = state.get("chat_history", [])
     user_name = state.get("user_name", "")
@@ -376,13 +416,13 @@ async def suggest_schedule_node(state: HermesState) -> dict:
     Sugiere ajustes al itinerario del usuario basándose en sus eventos de Calendar.
     Considera el contexto completo del calendario antes de proponer horarios.
     """
-    print(f"[HERMES][suggest_schedule_node] Generando sugerencias de horario...")
+    logger.debug(f"[HERMES][suggest_schedule_node] Generando sugerencias de horario...")
     google_token = state.get("google_token")
     events_context = ""
 
     if google_token:
         try:
-            events = get_calendar_events(google_token, max_results=30)
+            events = await _run_sync(get_calendar_events, google_token, max_results=30)
             if events:
                 events_context = "\n\nEventos del usuario en las próximas semanas:\n"
                 for e in events:

@@ -12,9 +12,16 @@ from app.database.crud_users import (
     deactivate_user,
 )
 from app.dependencies.auth import get_current_user
-from app.schemas.users import UserResponse
+from app.schemas.users import UserResponse, UpdateUserRequest
+from app.database.redis_operations import update_user_ranking
+
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/users", tags=["Usuarios"])
+
+
+class PuntosRequest(BaseModel):
+    puntos: int = Field(..., ge=1, le=500)
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -55,11 +62,7 @@ async def get_my_profile(
 
 @router.put("/me", response_model=UserResponse)
 async def update_my_profile(
-    full_name: Optional[str] = None,
-    u_degree: Optional[str] = None,
-    semester: Optional[int] = None,
-    universidad: Optional[str] = None,
-    birth_date: Optional[date] = None,
+    body: UpdateUserRequest,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -72,11 +75,11 @@ async def update_my_profile(
 
     updated = await update_user(
         db, user.id,
-        full_name=full_name,
-        u_degree=u_degree,
-        semester=semester,
-        universidad=universidad,
-        birth_date=birth_date,
+        full_name=body.full_name,
+        u_degree=body.u_degree,
+        semester=body.semester,
+        universidad=body.universidad,
+        birth_date=body.birth_date,
     )
     return updated
 
@@ -103,7 +106,8 @@ async def upload_photo(
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
-    ext = (foto.filename or "foto").rsplit(".", 1)[-1].lower()
+    MIME_TO_EXT = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+    ext = MIME_TO_EXT[foto.content_type]
     filename = f"{user.id}.{ext}"
     filepath = os.path.join(UPLOAD_DIR, filename)
 
@@ -114,6 +118,19 @@ async def upload_photo(
     photo_url = f"/static/fotos/{filename}"
     updated = await update_user(db, user.id, photo_url=photo_url)
     return updated
+
+
+@router.put("/puntos")
+async def update_puntos(
+    body: PuntosRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await get_user_by_email(db, current_user["email"])
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    await update_user_ranking(str(user.id), body.puntos)
+    return {"ok": True, "puntos": body.puntos}
 
 
 @router.delete("/me", status_code=204)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.postgres import get_db
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/ranking", tags=["Ranking"])
 
 
 @router.get("/top")
-async def get_global_top(limit: int = 10):
+async def get_global_top(limit: int = Query(default=10, ge=1, le=100)):
     """
     Retorna el top N del ranking global.
     Lee desde Redis (Sorted Set 'ranking:global') — no toca PostgreSQL.

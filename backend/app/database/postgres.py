@@ -10,15 +10,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # URL de conexión (Dennis te la dará)
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://hermes_user:password123@localhost:5432/hermes_db"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
 
 # Crear engine
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,  # Muestra las queries SQL en consola (útil para debug)
+    echo=os.getenv("SQL_ECHO", "false").lower() == "true",  # Muestra las queries SQL en consola (útil para debug)
     pool_pre_ping=True,  # Verifica que la conexión esté viva
 )
 

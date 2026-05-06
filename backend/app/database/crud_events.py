@@ -63,8 +63,7 @@ async def create_event(
         recurrence=recurrence
     )
     db.add(event)
-    await db.commit()
-    await db.refresh(event)
+    await db.flush()
     return event
 
 async def create_events_from_ocr(
@@ -113,13 +112,9 @@ async def create_events_from_ocr(
         )
         events.append(event)
         db.add(event)
-    
-    await db.commit()
-    
-    # Refrescar todos
-    for event in events:
-        await db.refresh(event)
-    
+
+    await db.flush()
+
     return events
 
 # ==========================================
@@ -282,8 +277,8 @@ async def update_event(
         .where(CalendarEvent.id == event_id)
         .values(**update_data)
     )
-    await db.commit()
-    
+    await db.flush()
+
     return await get_event_by_id(db, event_id)
 
 # ==========================================
@@ -300,7 +295,7 @@ async def delete_event(db: AsyncSession, event_id: uuid.UUID) -> bool:
     result = await db.execute(
         delete(CalendarEvent).where(CalendarEvent.id == event_id)
     )
-    await db.commit()
+    await db.flush()
     return result.rowcount > 0
 
 async def delete_all_user_events(db: AsyncSession, user_id: uuid.UUID) -> int:
@@ -314,7 +309,7 @@ async def delete_all_user_events(db: AsyncSession, user_id: uuid.UUID) -> int:
     result = await db.execute(
         delete(CalendarEvent).where(CalendarEvent.user_id == user_id)
     )
-    await db.commit()
+    await db.flush()
     return result.rowcount
 
 # ==========================================

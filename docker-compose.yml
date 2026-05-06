@@ -4,10 +4,10 @@ services:
     container_name: hermes_postgres
     environment:
       POSTGRES_USER: hermes_user
-      POSTGRES_PASSWORD: password123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: hermes
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/app/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -22,8 +22,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: hermes_redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -41,9 +39,7 @@ services:
     container_name: hermes_backend
     env_file:
       - .env
-    ports:
-      - "8000:8000"
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     volumes:
       - ./backend:/app
     depends_on:
@@ -51,6 +47,18 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - hermes_network
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: hermes_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
     networks:
       - hermes_network
 

@@ -105,6 +105,11 @@
     .event-badge { font-size:10px; padding:3px 10px; border-radius:20px; letter-spacing:0.1em; text-transform:uppercase; font-weight:500; }
     .badge-event { background:#fef3e2; color:#b87a00; }
     .empty-state { padding:40px 24px; text-align:center; color:var(--muted); font-size:13px; }
+    .month-header { padding:8px 24px; font-size:10px; letter-spacing:0.25em; text-transform:uppercase; color:var(--muted); background:var(--surface); border-bottom:1px solid var(--border); font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none; }
+    .month-header:hover { color:var(--gold); }
+    .month-header .chevron { transition:transform 0.2s; font-style:normal; }
+    .month-header.collapsed .chevron { transform:rotate(-90deg); }
+    .month-body.collapsed { display:none; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
   </style>
 </head>
@@ -174,6 +179,26 @@
     </div>
   </main>
 
+  <script>
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    // date-only strings like "2026-05-08" must be parsed as local midnight,
+    // not UTC midnight (which shifts the date in non-UTC timezones)
+    function parseEventDate(str) {
+      if (str && /^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        const [y, m, d] = str.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+      return new Date(str);
+    }
+  </script>
   <script type="module">
     import { requireAuth, authHeaders, API_BASE, signOut, fetchWithAuth } from "./auth.js";
 
@@ -198,13 +223,21 @@
         const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
         const dayAfter = new Date(today); dayAfter.setDate(today.getDate() + 2);
 
+        const now = new Date();
         allEvents = data.map(e => {
-          const start = new Date(e.start);
+          const isAllDay = /^\d{4}-\d{2}-\d{2}$/.test(e.start);
+          const start = parseEventDate(e.start);
           let day = "otro";
           if (start >= today    && start < tomorrow) day = "hoy";
           if (start >= tomorrow && start < dayAfter) day = "manana";
-          return { ...e, day, hora: start.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" }) };
-        });
+          const hora = isAllDay
+            ? "Todo el día"
+            : start.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
+          return { ...e, _start: start, _allDay: isAllDay, day, hora };
+        }).filter(e => {
+          const cutoff = new Date(today); cutoff.setFullYear(cutoff.getFullYear() + 1);
+          return e._start >= (e._allDay ? today : now) && e._start < cutoff;
+        }).sort((a, b) => a._start - b._start);
 
         updateStats();
         filterEvents("hoy", document.querySelector(".tab.active"));
@@ -236,6 +269,19 @@
         : "No tienes eventos pendientes hoy";
     }
 
+    function renderEventRow(e) {
+      const badge = e.day === "hoy" ? "Hoy"
+        : e.day === "manana" ? "Mañana"
+        : escapeHtml(e._start.toLocaleDateString("es-MX", { day:"numeric", month:"short" }));
+      return `
+        <div class="event-item">
+          <span class="event-time">${escapeHtml(e.hora)}</span>
+          <div class="event-dot" style="background:var(--gold)"></div>
+          <span class="event-name">${escapeHtml(e.title)}</span>
+          <span class="event-badge badge-event">${badge}</span>
+        </div>`;
+    }
+
     window.filterEvents = function(day, btn) {
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       btn.classList.add("active");
@@ -245,14 +291,35 @@
         list.innerHTML = `<div class="empty-state">Sin eventos en este período</div>`;
         return;
       }
-      list.innerHTML = filtered.map(e => `
-        <div class="event-item">
-          <span class="event-time">${e.hora}</span>
-          <div class="event-dot" style="background:var(--gold)"></div>
-          <span class="event-name">${e.title}</span>
-          <span class="event-badge badge-event">${e.day === "hoy" ? "Hoy" : "Mañana"}</span>
+      if (day !== "todos") {
+        list.innerHTML = filtered.map(renderEventRow).join("");
+        return;
+      }
+      // Group by month for "todos" view
+      const byMonth = {};
+      filtered.forEach(e => {
+        const key = e._start.toLocaleDateString("es-MX", { month:"long", year:"numeric" });
+        if (!byMonth[key]) byMonth[key] = [];
+        byMonth[key].push(e);
+      });
+      list.innerHTML = Object.entries(byMonth).map(([month, events], i) =>
+        `<div class="month-header" onclick="toggleMonth(this)">
+          <span>${escapeHtml(month)}</span>
+          <span class="chevron">▾</span>
         </div>
-      `).join("");
+        <div class="month-body${i > 0 ? ' collapsed' : ''}">
+          ${events.map(renderEventRow).join("")}
+        </div>`
+      ).join("");
+      // sync header state for pre-collapsed bodies
+      list.querySelectorAll('.month-body.collapsed').forEach(b =>
+        b.previousElementSibling.classList.add('collapsed')
+      );
+    };
+
+    window.toggleMonth = function(header) {
+      header.classList.toggle('collapsed');
+      header.nextElementSibling.classList.toggle('collapsed');
     };
 
     window.handleLogout = async function() {
