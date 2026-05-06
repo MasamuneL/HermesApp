@@ -198,13 +198,14 @@
         const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
         const dayAfter = new Date(today); dayAfter.setDate(today.getDate() + 2);
 
+        const now = new Date();
         allEvents = data.map(e => {
           const start = new Date(e.start);
           let day = "otro";
           if (start >= today    && start < tomorrow) day = "hoy";
           if (start >= tomorrow && start < dayAfter) day = "manana";
           return { ...e, day, hora: start.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" }) };
-        });
+        }).filter(e => new Date(e.start) >= now);
 
         updateStats();
         filterEvents("hoy", document.querySelector(".tab.active"));
@@ -250,7 +251,11 @@
           <span class="event-time">${e.hora}</span>
           <div class="event-dot" style="background:var(--gold)"></div>
           <span class="event-name">${e.title}</span>
-          <span class="event-badge badge-event">${e.day === "hoy" ? "Hoy" : "Mañana"}</span>
+          <span class="event-badge badge-event">${
+            e.day === "hoy" ? "Hoy" : 
+            e.day === "manana" ? "Mañana" : 
+            new Date(e.start).toLocaleDateString("es-MX", { day:"numeric", month:"short" })
+          }</span>
         </div>
       `).join("");
     };
