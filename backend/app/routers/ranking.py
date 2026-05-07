@@ -1,8 +1,10 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.postgres import get_db
-from app.database.crud_users import get_user_by_email
+from app.database.crud_users import get_user_by_email, get_users_by_ids
 from app.database.redis_operations import (
     get_top_ranking,
     get_user_rank,
@@ -15,14 +17,36 @@ router = APIRouter(prefix="/api/ranking", tags=["Ranking"])
 
 
 @router.get("/top")
-async def get_global_top(limit: int = Query(default=10, ge=1, le=100)):
+async def get_global_top(
+    limit: int = Query(default=10, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
     """
-    Retorna el top N del ranking global.
-    Lee desde Redis (Sorted Set 'ranking:global') — no toca PostgreSQL.
-    No requiere autenticación.
+    Retorna el top N del ranking global con nombre y foto de cada usuario.
     """
     top = await get_top_ranking(limit)
-    return {"success": True, "data": top}
+
+    valid_ids = []
+    for entry in top:
+        try:
+            valid_ids.append(uuid.UUID(entry["user_id"]))
+        except (ValueError, KeyError):
+            pass
+
+    users = await get_users_by_ids(db, valid_ids)
+    user_map = {str(u.id): u for u in users}
+
+    enriched = []
+    for entry in top:
+        u = user_map.get(entry["user_id"])
+        enriched.append({
+            "user_id": entry["user_id"],
+            "points": entry["points"],
+            "name": u.full_name if u else None,
+            "photo_url": u.photo_url if u else None,
+        })
+
+    return {"success": True, "data": enriched}
 
 
 @router.get("/me")
