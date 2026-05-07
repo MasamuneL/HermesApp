@@ -196,6 +196,13 @@ async def delete_user(db: AsyncSession, user_id: uuid.UUID) -> bool:
 # SEARCH - Buscar usuarios
 # ==========================================
 
+async def get_users_by_ids(db: AsyncSession, user_ids: List[uuid.UUID]) -> List[User]:
+    if not user_ids:
+        return []
+    result = await db.execute(select(User).where(User.id.in_(user_ids)))
+    return result.scalars().all()
+
+
 async def search_users_by_name(db: AsyncSession, query: str, limit: int = 10) -> List[User]:
     """
     Busca usuarios por nombre (coincidencia parcial)

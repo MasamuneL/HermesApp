@@ -222,17 +222,16 @@
       document.getElementById("btnGuardar").disabled = true;
 
       try {
-        const params = new URLSearchParams();
-        params.set("full_name", nombre);
+        const payload = { full_name: nombre };
 
         const carrera = document.getElementById("fieldCarrera").value.trim();
-        if (carrera) params.set("u_degree", carrera);
+        if (carrera) payload.u_degree = carrera;
 
         const semestre = document.getElementById("fieldSemestre").value;
-        if (semestre) params.set("semester", semestre);
+        if (semestre) payload.semester = Number(semestre);
 
         const uni = document.getElementById("fieldUniversidad").value.trim();
-        if (uni) params.set("universidad", uni);
+        if (uni) payload.universidad = uni;
 
         const dia  = document.getElementById("fieldDia").value;
         const mes  = document.getElementById("fieldMes").value;
@@ -240,12 +239,12 @@
         if (dia && mes && anio) {
           const mm = String(mes).padStart(2, "0");
           const dd = String(dia).padStart(2, "0");
-          params.set("birth_date", `${anio}-${mm}-${dd}`);
+          payload.birth_date = `${anio}-${mm}-${dd}`;
         }
 
         const res = await fetchWithAuth(
-          `${API_BASE}/api/users/me?${params.toString()}`,
-          { method: "PUT", headers: await authHeaders() }
+          `${API_BASE}/api/users/me`,
+          { method: "PUT", headers: await authHeaders(), body: JSON.stringify(payload) }
         );
         if (!res.ok) throw new Error();
         const updated = await res.json();
