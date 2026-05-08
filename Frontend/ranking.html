@@ -68,7 +68,9 @@
     .list-row:last-child { border-bottom:none; }
     .list-row:hover { background:var(--surface); }
     .list-rank { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:700; color:var(--muted); }
-    .list-name { font-size:14px; color:var(--text); font-weight:500; }
+    .list-name { font-size:14px; color:var(--text); font-weight:500; display:flex; align-items:center; gap:10px; }
+    .list-avatar { width:32px; height:32px; border-radius:50%; background:var(--surface); border:1px solid var(--gold-dim); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:600; color:var(--gold-light); overflow:hidden; flex-shrink:0; }
+    .list-avatar img { width:100%; height:100%; object-fit:cover; }
     .list-score { font-size:13px; font-weight:600; color:var(--gold); }
     .empty-state { padding:40px; text-align:center; color:var(--muted); font-size:13px; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
@@ -181,6 +183,14 @@
         : parts[0][0].toUpperCase();
     }
 
+    function avatarInner(p, size = "100%") {
+      if (p.photo_url) {
+        const initials = escapeHtml(getInitials(p.name));
+        return `<img src="${p.photo_url}" alt="${initials}" style="width:${size};height:${size};object-fit:cover;border-radius:50%;" onerror="this.outerHTML='${initials}'">`;
+      }
+      return escapeHtml(getInitials(p.name));
+    }
+
     function renderPodium(top3) {
       if (top3.length < 3) {
         document.getElementById("podiumSection").innerHTML =
@@ -194,7 +204,7 @@
 
       document.getElementById("podiumSection").innerHTML = order.map((p, i) => `
         <div class="podium-item">
-          <div class="podium-avatar">${escapeHtml(getInitials(p.name))}</div>
+          <div class="podium-avatar">${avatarInner(p)}</div>
           <div class="podium-name">${escapeHtml(p.name) || "Usuario"}</div>
           <div class="podium-score">${p.points.toLocaleString()} pts</div>
           <div class="podium-bar">
@@ -213,7 +223,7 @@
       document.getElementById("listSection").innerHTML = rest.map((p, i) => `
         <div class="list-row">
           <span class="list-rank">${i + 4}</span>
-          <span class="list-name">${escapeHtml(p.name) || "Usuario"}</span>
+          <span class="list-name"><span class="list-avatar">${avatarInner(p)}</span>${escapeHtml(p.name) || "Usuario"}</span>
           <span class="list-score">${p.points.toLocaleString()} pts</span>
         </div>
       `).join("");
